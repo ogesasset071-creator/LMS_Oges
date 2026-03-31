@@ -1,0 +1,191 @@
+/* Global Design System Tokens */
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;700&display=swap");
+
+:root {
+  /* Provided Theme Variables from Image */
+  --primary: #2b2b6b;
+  --secondary: #E74C2D;
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #ffffff;
+  --ring: var(--secondary);
+  --input: #ffffff;
+  --muted: #f8fafc;
+  --accent: #f1f5f9;
+  --border: #e2e8f0;
+  --radius: 0.375rem;
+
+  /* Font Scale and Stack */
+  --font-sans: "Montserrat", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* Semantic State Colors from Image */
+  --success: #2C5B32;
+  --success-foreground: #ffffff;
+  --info: #0A97E3;
+  --info-foreground: #ffffff;
+  --warning: #f59e0b;
+  --warning-foreground: #000000;
+  --destructive: #ef4444;
+
+  /* Layout & Typography Tokens */
+  --fs-heading: var(--fs-4xl);
+  --fs-sub-heading: var(--fs-3xl);
+  --fs-description: var(--fs-md);
+  --fs-small: var(--fs-sm);
+
+  /* Legacy Mapping for Compatibility */
+  --bg-color: var(--background);
+  --text-main: var(--foreground);
+  --text-sub: #4b5563; /* Slate 600 for contrast */
+  --card-bg: var(--card);
+  --border-color: var(--border);
+  --primary-orange: var(--secondary);
+  --primary-blue: var(--primary);
+  --danger: var(--destructive);
+
+  /* Gradients based on New Colors */
+  --gradient-blue: linear-gradient(135deg, var(--primary) 0%, #4a4a8a 100%);
+  --gradient-orange: linear-gradient(135deg, var(--secondary) 0%, #ff7c5c 100%);
+  --gradient-dark: linear-gradient(135deg, #1f1f4a 0%, #2b2b6b 100%);
+
+  /* Spacing Scale */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+  --space-4xl: 6rem;
+
+  /* Border Radius Scale */
+  --br-xs: 4px;
+  --br-sm: 8px;
+  --br-md: 12px;
+  --br-lg: 16px;
+  --br-xl: 24px;
+  --br-full: 9999px;
+
+  /* Shadow Tokens */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-premium: var(--shadow-xl);
+
+  /* Effects */
+  --transition-smooth: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1);
+  --accent-glow: rgba(231, 76, 45, 0.2);
+}
+
+.dark,
+.dark-theme {
+  /* Provided Theme Variables - Dark Mode Overrides */
+  --card: #000000;
+  --ring: var(--secondary);
+  --input: #111111;
+  --muted: #111111;
+  --accent: var(--primary);
+  --border: #222222;
+  --popover: #000000;
+  --primary: #4f46e5;
+  --secondary: #E74C2D;
+  --background: #000000;
+  --foreground: #ffffff;
+  --destructive: #ef4444;
+  --sidebar: #000000;
+  --sidebar-ring: var(--primary);
+  --sidebar-accent: #111111;
+  --sidebar-border: #222222;
+  --card-foreground: #ffffff;
+  --sidebar-primary: var(--primary);
+  --muted-foreground: #a3a3a3;
+  --accent-foreground: #ffffff;
+  --popover-foreground: #ffffff;
+  --primary-foreground: #ffffff;
+  --sidebar-foreground: #ffffff;
+  --secondary-foreground: #ffffff;
+  --destructive-foreground: #ffffff;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-primary-foreground: #ffffff;
+
+  /* Legacy Mapping - Redefine for precedence */
+  --bg-color: var(--background);
+  --text-main: var(--foreground);
+  --card-bg: var(--card);
+  --border-color: var(--border);
+
+  /* Dark Mode Semantic Overrides */
+  --text-sub: #a3a3a3;
+  --border-color: #222222;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --info: #60a5fa;
+  --shadow-color: rgba(0, 0, 0, 0.4);
+}
+
+/* Global Reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans), "Poppins", sans-serif;
+}
+
+input, textarea, select {
+  color: var(--foreground);
+  background-color: var(--input);
+  border: 1px solid var(--border);
+  font-family: inherit;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--ring);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition:
+    background-color 0.4s ease,
+    color 0.4s ease;
+  overflow-x: hidden;
+}
+
+/* Typography Classes */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--foreground);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+/* Global Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--background); }
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+  border: 2px solid var(--background);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+
+
+/* Responsive Overrides */
+@media (max-width: 768px) {
+  :root {
+    --fs-heading: 2.25rem;
+    --fs-sub-heading: 1.5rem;
+    --fs-description: 1rem;
+  }
+}
+
