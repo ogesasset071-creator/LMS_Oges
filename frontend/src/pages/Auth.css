@@ -10,49 +10,144 @@
   font-family: 'Outfit', sans-serif;
   position: relative;
   transition: background-color 0.3s ease;
+  overflow: hidden;
 }
 
-.theme-toggle-auth {
-  position: absolute;
-  top: 2rem;
-  right: 2.5rem;
-  z-index: 50;
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s;
-  backdrop-filter: blur(10px);
+.bg-blur-shapes {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.shape {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    opacity: 0.15;
+}
+
+.shape-1 {
+    width: 500px;
+    height: 500px;
+    background: #4f46e5;
+    top: -100px;
+    left: -100px;
+}
+
+.shape-2 {
+    width: 400px;
+    height: 400px;
+    background: #312e81;
+    bottom: -100px;
+    right: -100px;
+}
+
+.shape-3 {
+    width: 300px;
+    height: 300px;
+    background: #6366f1;
+    top: 50%;
+    left: 60%;
+    transform: translate(-50%, -50%);
+}
+
+.theme-switch-container {
+    position: absolute;
+    top: 2rem;
+    right: 2.5rem;
+    z-index: 50;
+    display: flex;
+    background: rgba(var(--card-bg-rgb), 0.1);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 4px;
+    border-radius: 14px;
+    gap: 4px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.theme-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 1rem;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-sub);
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: inherit;
+}
+
+.theme-btn svg {
+    opacity: 0.6;
+    transition: inherit;
+}
+
+.theme-btn:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.theme-btn.active {
+    background: #312e81;
+    color: white;
+    box-shadow: 0 4px 15px rgba(49, 46, 129, 0.3);
+}
+
+.theme-btn.active svg {
+    opacity: 1;
+}
+
+.dark .theme-btn.active {
+    background: #4f46e5;
+    box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
 }
 
 .auth-container {
   display: flex;
   width: 100%;
-  max-width: 1000px;
-  min-height: 650px;
-  background: var(--card-bg);
+  max-width: 1400px;
+  min-height: 750px;
+  background: rgba(var(--card-bg-rgb), 0.7);
+  backdrop-filter: blur(30px);
   border-radius: 2rem;
   overflow: hidden;
-  box-shadow: 0 40px 100px rgba(0,0,0,0.15);
-  border: 1px solid var(--border-color);
+  box-shadow: 0 40px 100px rgba(0,0,0,0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.3s ease;
+  z-index: 2;
+}
+
+.auth-container:hover {
+  box-shadow: 0 50px 120px rgba(0,0,0,0.35);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 /* LEFT PANEL - VISUAL REPLICA */
 .auth-visual-panel {
-  flex: 1.1;
-  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
-  padding: 3.5rem;
+  flex: 1.2;
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+  padding: 4rem;
   display: flex !important;
   flex-direction: column;
   justify-content: space-between;
   color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-visual-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 30px 30px;
+    opacity: 0.3;
 }
 
 .visual-top-brand {
@@ -78,11 +173,13 @@
 }
 
 .visual-hero-text h2 {
-    font-size: 3.1rem;
-    font-weight: 850;
-    line-height: 1.1;
-    letter-spacing: -0.04em;
-    margin-bottom: 1.5rem;
+    font-size: 3.5rem;
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -0.05em;
+    margin-bottom: 2rem;
+    position: relative;
+    z-index: 2;
 }
 
 .visual-hero-text p {
@@ -121,7 +218,7 @@
   display: flex !important;
   align-items: center;
   justify-content: center;
-  padding: 3rem;
+  padding: 4.5rem;
   transition: background-color 0.3s ease;
 }
 
@@ -130,17 +227,19 @@
 }
 
 .auth-header-section h1 {
-    font-size: 2.2rem;
-    font-weight: 900;
-    margin-bottom: 0.75rem;
-    color: var(--text-main);
-    letter-spacing: -0.02em;
+  font-size: 2.8rem;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  color: var(--text-main);
+  margin-bottom: 0.75rem;
 }
 
 .auth-subtitle {
-    font-size: 0.95rem;
-    color: var(--text-sub);
-    margin-bottom: 2.5rem;
+  color: var(--text-sub);
+  font-weight: 500;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin-bottom: 3.5rem;
 }
 
 .input-field-group {
@@ -175,23 +274,55 @@
     background: var(--card-bg);
 }
 
-.submit-auth-btn {
-    width: 100%;
-    background: #4f46e5;
-    color: white;
+.password-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-input-wrapper input {
+    padding-right: 3.5rem !important; /* Ensure space for the eye button */
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 1.1rem;
+    background: none;
     border: none;
-    padding: 1.1rem;
-    border-radius: 12px;
-    font-size: 1.1rem;
-    font-weight: 800;
+    color: var(--text-sub);
     cursor: pointer;
-    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    opacity: 0.6;
     transition: all 0.2s;
 }
 
+.password-toggle-btn:hover {
+    opacity: 1;
+    color: var(--primary);
+}
+
+.submit-auth-btn {
+    width: 100%;
+    background: #312e81;
+    color: white;
+    border: none;
+    padding: 1.25rem;
+    border-radius: 14px;
+    font-size: 1.15rem;
+    font-weight: 900;
+    cursor: pointer;
+    margin-top: 1.5rem;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1);
+    box-shadow: 0 10px 30px rgba(49, 46, 129, 0.2);
+}
+
 .submit-auth-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+    transform: translateY(-3px);
+    background: #3730a3;
+    box-shadow: 0 15px 40px rgba(49, 46, 129, 0.4);
 }
 
 .form-container-glass {

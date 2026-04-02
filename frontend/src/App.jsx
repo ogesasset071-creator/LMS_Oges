@@ -76,7 +76,7 @@ function AppContent() {
   const [isShowingIdlePopup, setIsShowingIdlePopup] = useState(false);
 
   useEffect(() => {
-    if (!isLoggedIn || (user?.role !== "student" && user?.role !== "learner"))
+    if (!isLoggedIn || (user?.Lms_role !== "student" && user?.Lms_role !== "learner"))
       return;
 
     const handleActivity = () => {
@@ -106,7 +106,7 @@ function AppContent() {
   useEffect(() => {
     if (
       !isLoggedIn ||
-      (user?.role !== "student" && user?.role !== "learner") ||
+      (user?.Lms_role !== "student" && user?.Lms_role !== "learner") ||
       isGlobalVideoPlaying
     )
       return;
@@ -173,7 +173,7 @@ function AppContent() {
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
     localStorage.setItem("token", userData.access_token);
-    if (userData.role === "admin" || userData.role === "educator")
+    if (userData.Lms_role === "admin" || userData.Lms_role === "educator")
       navigate("/admin");
     else navigate("/");
   };
@@ -188,7 +188,6 @@ function AppContent() {
     onCategoriesClick: () => navigate("/categories"),
     onTutorsClick: () => navigate("/admins"),
     onLoginClick: () => navigate("/login"),
-    onSignupClick: () => navigate("/signup"),
     onLogout: logout,
     isLoggedIn,
     isDarkMode,

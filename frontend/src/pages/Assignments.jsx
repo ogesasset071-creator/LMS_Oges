@@ -85,7 +85,7 @@ const Assignments = (props) => {
                             <h1>Platform <span className="text-gradient">Challenges</span></h1>
                             <p>Complete curated tasks to earn exclusive badges and climb the Oges skill ranks.</p>
                         </div>
-                        {(user?.role === 'educator' || user?.role === 'admin') && (
+                        {(user?.Lms_role === 'educator' || user?.Lms_role === 'admin') && (
                             <button className="btn-create-assign" onClick={() => setShowCreateModal(true)}>
                                 <FiPlus /> Create New Assignment
                             </button>

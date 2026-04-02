@@ -188,7 +188,7 @@ const AdminPanel = ({ onLogout }) => {
                   {mockUsers.map((user) => (
                     <tr key={user.id}>
                       <td className="bold-td">{user.name}</td>
-                      <td>{user.email}</td>
+                      <td>{user.Lms_email}</td>
                       <td>
                         <span
                           className={`status-badge ${user.status.toLowerCase()}`}

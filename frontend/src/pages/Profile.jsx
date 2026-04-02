@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import "./Profile.css";
 import Navbar from "../components/Navbar";
 import api from "../services/api";
-import logo from "../assets/Compaylogo.png";
+import logo from "../assets/OgesLogo.png";
 import Cropper from 'react-easy-crop';
 import { getCroppedImgFile } from "../utils/canvasUtils";
 
@@ -16,10 +16,10 @@ const Profile = (props) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Ongoing");
 
-  const [editName, setEditName] = useState(user?.full_name || "");
-  const [editBio, setEditBio] = useState(user?.bio || "");
-  const [editAvatar, setEditAvatar] = useState(user?.avatar || "");
-  const [editCategory, setEditCategory] = useState(user?.category || "");
+  const [editName, setEditName] = useState(user?.Lms_full_name || "");
+  const [editBio, setEditBio] = useState(user?.Lms_bio || "");
+  const [editAvatar, setEditAvatar] = useState(user?.Lms_avatar || "");
+  const [editCategory, setEditCategory] = useState(user?.Lms_category || "");
   const [loading, setLoading] = useState(false);
   const [myCourses, setMyCourses] = useState([]);
   const [eduStats, setEduStats] = useState(null);
@@ -47,7 +47,7 @@ const Profile = (props) => {
       setAssignments(assignRes.data);
       if (onUserUpdate) onUserUpdate(meRes.data);
 
-      if (meRes.data.role === "educator") {
+      if (meRes.data.Lms_role === "educator") {
         const statsRes = await api.get("/educator/stats");
         setEduStats(statsRes.data);
       }
@@ -62,10 +62,10 @@ const Profile = (props) => {
 
   useEffect(() => {
     setUser(initialUser);
-    setEditName(initialUser?.full_name || "");
-    setEditBio(initialUser?.bio || "");
-    setEditAvatar(initialUser?.avatar || "");
-    setEditCategory(initialUser?.category || "");
+    setEditName(initialUser?.Lms_full_name || "");
+    setEditBio(initialUser?.Lms_bio || "");
+    setEditAvatar(initialUser?.Lms_avatar || "");
+    setEditCategory(initialUser?.Lms_category || "");
   }, [initialUser]);
 
   const handleUpdateProfile = async (e) => {
@@ -73,10 +73,10 @@ const Profile = (props) => {
     setLoading(true);
     try {
       const res = await api.put("/user/profile", {
-        full_name: editName,
-        bio: editBio,
-        avatar: editAvatar,
-        category: editCategory,
+        Lms_full_name: editName,
+        Lms_bio: editBio,
+        Lms_avatar: editAvatar,
+        Lms_category: editCategory,
       });
       setUser(res.data);
       if (onUserUpdate) onUserUpdate(res.data);
@@ -124,9 +124,9 @@ const Profile = (props) => {
         headers: { "Content-Type": "multipart/form-data" }
       });
 
-      setEditAvatar(res.data.avatar);
-      setUser(prev => ({ ...prev, avatar: res.data.avatar }));
-      if (onUserUpdate) onUserUpdate({ ...user, avatar: res.data.avatar });
+      setEditAvatar(res.data.Lms_avatar);
+      setUser(prev => ({ ...prev, avatar: res.data.Lms_avatar }));
+      if (onUserUpdate) onUserUpdate({ ...user, avatar: res.data.Lms_avatar });
       setShowCropper(false);
       setImageSrc(null);
     } catch (e) {
@@ -138,7 +138,7 @@ const Profile = (props) => {
   };
 
   const getAchievements = () => {
-    const xp = user?.xp || 0;
+    const xp = user?.Lms_xp || 0;
     const tiers = [
       { threshold: 100, name: "Learner 🥉", icon: "🥉" },
       { threshold: 500, name: "Scholar 🥈", icon: "🥈" },
@@ -162,8 +162,8 @@ const Profile = (props) => {
           <div className="profile-info-main">
             <div className="avatar-wrapper-premium">
               <div className="main-avatar-premium">
-                {user?.avatar ? (
-                  <img src={user.avatar} alt="Profile" />
+                {user?.Lms_avatar ? (
+                  <img src={user.Lms_avatar} alt="Profile" />
                 ) : (
                   <div className="placeholder-avatar">🎓</div>
                 )}
@@ -184,13 +184,13 @@ const Profile = (props) => {
             </div>
             <div className="user-details-premium">
               <div className="name-row-p">
-                <h1>{user?.full_name || "Scholar"}</h1>
-                <span className={`role-badge-p ${user?.role}`}>{user?.role}</span>
+                <h1>{user?.Lms_full_name || "Scholar"}</h1>
+                <span className={`role-badge-p ${user?.Lms_role}`}>{user?.Lms_role}</span>
               </div>
-              <p className="username-premium">@{user?.email?.split("@")[0] || "learner"} • {user?.category || "General Learner"}</p>
-              <p className="bio-premium">{user?.bio || "Passionate about learning and skill-building on LMS Oges."}</p>
+              <p className="username-premium">@{user?.Lms_email?.split("@")[0] || "learner"} • {user?.Lms_category || "General Learner"}</p>
+              <p className="bio-premium">{user?.Lms_bio || "Passionate about learning and skill-building on LMS Oges."}</p>
               <div className="badge-showcase-premium">
-                {(user?.badges || "").split(',').filter(Boolean).map((b, i) => (
+                {(user?.Lms_badges || "").split(',').filter(Boolean).map((b, i) => (
                   <span className="badge-item-premium" key={i} title="Earned Achievement">{b}</span>
                 ))}
               </div>
@@ -202,21 +202,21 @@ const Profile = (props) => {
             <div className="p-stat-premium">
               <div className="p-stat-icon-wrapper orange">🔥</div>
               <div className="p-stat-info">
-                <span className="p-stat-val">{user?.streak || 1} Days</span>
+                <span className="p-stat-val">{user?.Lms_streak || 1} Days</span>
                 <span className="p-stat-label">Streak</span>
               </div>
             </div>
             <div className="p-stat-premium">
               <div className="p-stat-icon-wrapper blue">⏱️</div>
               <div className="p-stat-info">
-                <span className="p-stat-val">{user?.total_minutes || 0}</span>
+                <span className="p-stat-val">{user?.Lms_total_minutes || 0}</span>
                 <span className="p-stat-label">Min Learned</span>
               </div>
             </div>
             <div className="p-stat-premium">
               <div className="p-stat-icon-wrapper green">🌟</div>
               <div className="p-stat-info">
-                <span className="p-stat-val">{user?.xp || 0}</span>
+                <span className="p-stat-val">{user?.Lms_xp || 0}</span>
                 <span className="p-stat-label">Total XP</span>
               </div>
             </div>
@@ -226,18 +226,18 @@ const Profile = (props) => {
         <section className="profile-section-premium level-card-premium">
           <div className="level-flex">
             <div className="level-text">
-              <h3>Level {Math.floor((user?.xp || 0) / 1000) + 1}</h3>
-              <p>{1000 - ((user?.xp || 0) % 1000)} XP to next milestone</p>
+              <h3>Level {Math.floor((user?.Lms_xp || 0) / 1000) + 1}</h3>
+              <p>{1000 - ((user?.Lms_xp || 0) % 1000)} XP to next milestone</p>
             </div>
             <div className="xp-bar-container">
               <div className="xp-bar-track">
                 <div
                   className="xp-bar-fill-premium"
-                  style={{ width: `${((user?.xp || 0) % 1000) / 10}%` }}
+                  style={{ width: `${((user?.Lms_xp || 0) % 1000) / 10}%` }}
                 ></div>
               </div>
               <span className="xp-percentage">
-                {Math.floor(((user?.xp || 0) % 1000) / 10)}%
+                {Math.floor(((user?.Lms_xp || 0) % 1000) / 10)}%
               </span>
             </div>
           </div>
@@ -305,7 +305,7 @@ const Profile = (props) => {
             </div>
           </section>
 
-          {user?.role === "educator" && eduStats && (
+          {user?.Lms_role === "educator" && eduStats && (
             <section className="profile-section-premium educator-insights-card">
               <div className="section-header-premium">
                 <h2 className="section-title-premium">Teaching Insights</h2>
@@ -378,7 +378,7 @@ const Profile = (props) => {
                 <span className="cert-og-label">OGES PLATFORM</span>
                 <h1>CERTIFICATE</h1>
                 <p>This is to certify that</p>
-                <h2 className="cert-recipient">{user?.full_name || "Scholar"}</h2>
+                <h2 className="cert-recipient">{user?.Lms_full_name || "Scholar"}</h2>
                 <p>has completed</p>
                 <h3 className="cert-course-title">{certData.title}</h3>
               </div>

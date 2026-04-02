@@ -1,6 +1,5 @@
 fastapi
 uvicorn
-fastapi-cors
 python-jose[cryptography]
 passlib[bcrypt]
 python-multipart

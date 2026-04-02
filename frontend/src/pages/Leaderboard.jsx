@@ -26,8 +26,8 @@ const Leaderboard = ({ onProfileClick, onHomeClick, onLeaderboardClick, onDashbo
   const usersWithFlag = users.map((u, index) => ({
     ...u,
     rank: index + 1,
-    name: u.full_name,
-    isCurrentUser: u.email === user?.email,
+    name: u.Lms_full_name,
+    isCurrentUser: u.Lms_email === user?.Lms_email,
   }));
 
   const top3 = usersWithFlag.slice(0, 3);
@@ -38,8 +38,8 @@ const Leaderboard = ({ onProfileClick, onHomeClick, onLeaderboardClick, onDashbo
 
   // Avatar display helper
   const getAvatarDisplay = (u) => {
-    if (u.avatar && u.avatar.startsWith('http')) {
-      return <img src={u.avatar} alt={u.name} className="lb-avatar-img" />;
+    if (u.Lms_avatar && u.Lms_avatar.startsWith('http')) {
+      return <img src={u.Lms_avatar} alt={u.name} className="lb-avatar-img" />;
     }
     // Fallback to initials
     const initials = (u.name || '?').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
@@ -84,9 +84,9 @@ const Leaderboard = ({ onProfileClick, onHomeClick, onLeaderboardClick, onDashbo
                       <div className="rank-badge-podium">#{u.rank}</div>
                     </div>
                     <h3>{u.isCurrentUser ? 'You' : u.name}</h3>
-                    <p className="p-xp">{u.xp.toLocaleString()} XP</p>
-                    <p className="p-pp" style={{ fontSize: '0.9rem', color: '#eab308', fontWeight: 'bold' }}>✨ {u.pp.toLocaleString()} PP</p>
-                    <div className="p-streak">🔥 {u.streak} days</div>
+                    <p className="p-xp">{u.Lms_xp.toLocaleString()} XP</p>
+                    <p className="p-pp" style={{ fontSize: '0.9rem', color: '#eab308', fontWeight: 'bold' }}>✨ {u.Lms_pp.toLocaleString()} PP</p>
+                    <div className="p-streak">🔥 {u.Lms_streak} days</div>
                   </div>
                 ))}
               </section>
@@ -101,15 +101,15 @@ const Leaderboard = ({ onProfileClick, onHomeClick, onLeaderboardClick, onDashbo
                     <span className="u-label">Overall Rank</span>
                   </div>
                   <div className="u-rank-main">
-                    <span className="u-val">{currentUserData.xp.toLocaleString()}</span>
+                    <span className="u-val">{currentUserData.Lms_xp.toLocaleString()}</span>
                     <span className="u-label">Total XP</span>
                   </div>
                   <div className="u-rank-main">
-                    <span className="u-val">{currentUserData.pp.toLocaleString()}</span>
+                    <span className="u-val">{currentUserData.Lms_pp.toLocaleString()}</span>
                     <span className="u-label">Total PP</span>
                   </div>
                   <div className="u-rank-main">
-                    <span className="u-val">{currentUserData.streak} Days</span>
+                    <span className="u-val">{currentUserData.Lms_streak} Days</span>
                     <span className="u-label">Streak</span>
                   </div>
                 </div>
@@ -117,8 +117,8 @@ const Leaderboard = ({ onProfileClick, onHomeClick, onLeaderboardClick, onDashbo
                   <div className="u-rank-progress">
                     {(() => {
                       const above = usersWithFlag.find(u => u.rank === currentUserData.rank - 1);
-                      const xpNeeded = above ? above.xp - currentUserData.xp : 0;
-                      const pct = above ? Math.min(Math.floor((currentUserData.xp / above.xp) * 100), 99) : 0;
+                      const xpNeeded = above ? above.Lms_xp - currentUserData.Lms_xp : 0;
+                      const pct = above ? Math.min(Math.floor((currentUserData.Lms_xp / above.Lms_xp) * 100), 99) : 0;
                       return (
                         <>
                           <p>{xpNeeded.toLocaleString()} XP left to reach <strong>#{currentUserData.rank - 1}</strong> Rank</p>
@@ -150,9 +150,9 @@ const Leaderboard = ({ onProfileClick, onHomeClick, onLeaderboardClick, onDashbo
                       <div className="r-avatar">{getAvatarDisplay(u)}</div>
                       <span>{u.isCurrentUser ? `You (${u.name})` : u.name}</span>
                     </div>
-                    <div className="r-streak">🔥 {u.streak}d</div>
-                    <div className="r-pp" style={{ color: '#eab308', fontWeight: 'bold' }}>{u.pp.toLocaleString()}</div>
-                    <div className="r-xp">{u.xp.toLocaleString()}</div>
+                    <div className="r-streak">🔥 {u.Lms_streak}d</div>
+                    <div className="r-pp" style={{ color: '#eab308', fontWeight: 'bold' }}>{u.Lms_pp.toLocaleString()}</div>
+                    <div className="r-xp">{u.Lms_xp.toLocaleString()}</div>
                   </div>
                 ))}
               </div>

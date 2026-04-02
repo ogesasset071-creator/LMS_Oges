@@ -1404,3 +1404,48 @@
     display: none;
   }
 }
+
+/* Featured Energy & SaaS Section */
+.energy-saas-featured-section {
+  background: linear-gradient(135deg, rgba(251, 203, 14, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%);
+  padding: 3rem;
+  border-radius: 2rem;
+  border: 1px solid rgba(251, 203, 14, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.energy-saas-featured-section::after {
+  content: "";
+  position: absolute;
+  top: -20%;
+  right: -10%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(251, 203, 14, 0.1) 0%, transparent 70%);
+  filter: blur(40px);
+  z-index: 0;
+}
+
+.energy-saas-featured-section .section-header-home {
+  position: relative;
+  z-index: 1;
+}
+
+.energy-saas-featured-section .course-grid-home {
+  position: relative;
+  z-index: 1;
+}
+
+.course-pp-badge {
+  display: inline-block;
+  background: #fefce8;
+  color: #a16207;
+  padding: 0.4rem 1rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid rgba(161, 98, 7, 0.1);
+}

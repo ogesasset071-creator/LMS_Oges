@@ -21,10 +21,10 @@ const Admins = () => {
         const res = await api.get("/admins");
         const enhanced = res.data.map(t => ({
           ...t,
-          role: t.role === "admin" ? "Internal Lead" : "Training Coordinator",
-          displayRole: t.role === "admin" ? "Internal Lead" : "Training Coordinator",
+          role: t.Lms_role === "admin" ? "Internal Lead" : "Training Coordinator",
+          displayRole: t.Lms_role === "admin" ? "Internal Lead" : "Training Coordinator",
           students: "Team Member",
-          photo: t.avatar || ""
+          photo: t.Lms_avatar || ""
         }));
         setTutors(enhanced);
       } catch (err) {
@@ -39,15 +39,15 @@ const Admins = () => {
   const filteredTutors = useMemo(() => {
     return tutors.filter(t => {
       const matchesSearch =
-        t.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        t.role?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        t.bio?.toLowerCase().includes(searchQuery.toLowerCase());
+        t.Lms_full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        t.Lms_role?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        t.Lms_bio?.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesCategory =
         activeCategory === "All" ||
-        t.role === activeCategory ||
-        (activeCategory === "Engineering" && t.bio?.toLowerCase().includes("engineering")) ||
-        (activeCategory === "HR" && t.bio?.toLowerCase().includes("hr"));
+        t.Lms_role === activeCategory ||
+        (activeCategory === "Engineering" && t.Lms_bio?.toLowerCase().includes("engineering")) ||
+        (activeCategory === "HR" && t.Lms_bio?.toLowerCase().includes("hr"));
 
       return matchesSearch && matchesCategory;
     });
@@ -107,17 +107,17 @@ const Admins = () => {
               >
                 <div className="tutor-avatar-wrapper">
                   <div className="tutor-avatar-lg">
-                    {tutor.avatar ? (
-                      <img src={tutor.avatar} alt={tutor.full_name} />
+                    {tutor.Lms_avatar ? (
+                      <img src={tutor.Lms_avatar} alt={tutor.Lms_full_name} />
                     ) : (
-                      <div className="avatar-placeholder-mini">{tutor.full_name?.charAt(0)}</div>
+                      <div className="avatar-placeholder-mini">{tutor.Lms_full_name?.charAt(0)}</div>
                     )}
                   </div>
                 </div>
                 <div className="tutor-main-info">
-                  <h3>{tutor.full_name || tutor.name}</h3>
+                  <h3>{tutor.Lms_full_name || tutor.name}</h3>
                   <div className="tutor-role-home">{tutor.displayRole}</div>
-                  <div className="tutor-bio-short">{tutor.bio || "Internal expert sharing knowledge and leading critical training initiatives for the company."}</div>
+                  <div className="tutor-bio-short">{tutor.Lms_bio || "Internal expert sharing knowledge and leading critical training initiatives for the company."}</div>
 
                   <div className="tutor-stats-professional">
                     <div className="t-stat">

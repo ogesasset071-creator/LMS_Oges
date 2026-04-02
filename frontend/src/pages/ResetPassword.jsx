@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import './Auth.css';
 import api from "../services/api";
-import logo from "../assets/Compaylogo.png";
+import logo from "../assets/OgesLogo.png";
 import Footer from '../components/Footer';
 
 const ResetPassword = () => {

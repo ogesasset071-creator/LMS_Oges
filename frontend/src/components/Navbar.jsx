@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { FiSearch, FiSun, FiMoon, FiUser, FiLogOut } from "react-icons/fi";
 import "./Navbar.css";
-import logo from "../assets/Compaylogo.png";
+import logo from "../assets/OgesLogo.png";
 const Navbar = ({
   onProfileClick,
   onHomeClick,
@@ -12,7 +12,6 @@ const Navbar = ({
   onCategoriesClick,
   onTutorsClick,
   onLoginClick,
-  onSignupClick,
   onLogout,
   isLoggedIn,
   isDarkMode,
@@ -190,16 +189,16 @@ const Navbar = ({
               {formatTime(sessionTime)}
             </div>
             <div className="nav-stat-item streak-badge">
-              {user?.streak || 1} Days
+              {user?.Lms_streak || 1} Days
             </div>
-            <div className="nav-stat-item xp-badge">{user?.xp || 0} XP</div>
-            <div className="nav-stat-item pp-badge">{user?.pp || 0} PP</div>
+            <div className="nav-stat-item xp-badge">{user?.Lms_xp || 0} XP</div>
+            <div className="nav-stat-item pp-badge">{user?.Lms_pp || 0} PP</div>
 
             <div className="profile-container" onClick={onProfileClick}>
               <div className="profile-avatar">
-                {user?.avatar && user.avatar !== "" ? (
+                {user?.Lms_avatar && user.Lms_avatar !== "" ? (
                   <img
-                    src={user.avatar}
+                    src={user.Lms_avatar}
                     alt="Avatar"
                     onError={(e) => {
                       e.target.style.display = "none";

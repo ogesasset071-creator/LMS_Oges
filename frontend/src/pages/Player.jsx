@@ -30,7 +30,7 @@ const Player = (props) => {
   const [notes, setNotes] = useState("");
   const [activeTab, setActiveTab] = useState("content"); // content, notes, resources
   const [savingNote, setSavingNote] = useState(false);
-  const [localPP, setLocalPP] = useState(props.user?.pp || 0);
+  const [localPP, setLocalPP] = useState(props.user?.Lms_pp || 0);
   const [isPlaying, setIsPlaying] = useState(false);
 
   // Personal Resources
@@ -81,10 +81,10 @@ const Player = (props) => {
   };
 
   useEffect(() => {
-    if (user?.pp !== undefined) {
-      setLocalPP(user.pp);
+    if (user?.Lms_pp !== undefined) {
+      setLocalPP(user.Lms_pp);
     }
-  }, [user?.pp]);
+  }, [user?.Lms_pp]);
 
   // YouTube API Integration
   useEffect(() => {

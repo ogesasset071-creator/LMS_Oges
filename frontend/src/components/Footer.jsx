@@ -9,7 +9,7 @@ import {
   FiPhone,
 } from "react-icons/fi";
 import "./Footer.css";
-import logo from "../assets/Compaylogo.png";
+import logo from "../assets/OgesLogo.png";
 
 const Footer = () => {
   return (

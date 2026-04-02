@@ -13,14 +13,29 @@ SECRET_KEY = os.getenv("SECRET_KEY", "LMSSecretKeySuperSecure")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440 # 24 Hours
 
+from passlib.context import CryptContext
+
 # --- Hashing Helper ---
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 def hash_password(password: str) -> str:
-    """Hashes a password using SHA-256."""
-    return hashlib.sha256(password.encode()).hexdigest()
+    """Hashes a password using bcrypt."""
+    return pwd_context.hash(password)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verifies that the plain password matches the SHA-256 hashed password."""
-    return hash_password(plain_password) == hashed_password
+    """Verifies that the plain password matches the hashed password. Handles legacy plaintext correctly."""
+    if not hashed_password:
+        return False
+        
+    # If the hash starts with bcrypt signature, verify normally
+    if hashed_password.startswith("$2"):
+        try:
+            return pwd_context.verify(plain_password, hashed_password)
+        except Exception:
+            return False
+            
+    # Fallback to direct comparison for old plaintext passwords (or SHA-256)
+    return plain_password == hashed_password
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
 
@@ -63,7 +78,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db = Depends(get
         raise credentials_exception
         
     with db.cursor() as cursor:
-        cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
+        cursor.execute("SELECT * FROM Lms_users WHERE Lms_email = %s", (email,))
         user = cursor.fetchone()
         
     if not user:

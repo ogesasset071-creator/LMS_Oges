@@ -4,19 +4,19 @@
 class User:
     def __init__(self, **kwargs):
         self.id = kwargs.get("id")
-        self.full_name = kwargs.get("full_name")
-        self.email = kwargs.get("email")
-        self.password_hash = kwargs.get("password_hash")
-        self.role = kwargs.get("role", "learner")
-        self.xp = kwargs.get("xp", 0)
-        self.streak = kwargs.get("streak", 1)
-        self.total_minutes = kwargs.get("total_minutes", 0)
-        self.last_login = kwargs.get("last_login")
-        self.bio = kwargs.get("bio", "")
-        self.avatar = kwargs.get("avatar", "https://cdn-icons-png.flaticon.com/512/149/149071.png")
-        self.badges = kwargs.get("badges", "")
-        self.category = kwargs.get("category", "")
-        self.pp = kwargs.get("pp", 0)
+        self.Lms_full_name = kwargs.get("Lms_full_name")
+        self.Lms_email = kwargs.get("Lms_email")
+        self.Lms_password_hash = kwargs.get("Lms_password_hash")
+        self.Lms_role = kwargs.get("Lms_role", "learner")
+        self.Lms_xp = kwargs.get("Lms_xp", 0)
+        self.Lms_streak = kwargs.get("Lms_streak", 1)
+        self.Lms_total_minutes = kwargs.get("Lms_total_minutes", 0)
+        self.Lms_last_login = kwargs.get("Lms_last_login")
+        self.Lms_bio = kwargs.get("Lms_bio", "")
+        self.Lms_avatar = kwargs.get("Lms_avatar", "https://cdn-icons-png.flaticon.com/512/149/149071.png")
+        self.Lms_badges = kwargs.get("Lms_badges", "")
+        self.Lms_category = kwargs.get("Lms_category", "")
+        self.Lms_pp = kwargs.get("Lms_pp", 0)
 
 class Course:
     def __init__(self, **kwargs):

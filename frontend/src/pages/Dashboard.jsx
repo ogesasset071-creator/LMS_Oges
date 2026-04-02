@@ -60,30 +60,40 @@ const Dashboard = ({
     Swal.fire({
       title: 'Official Certificate of Achievement',
       html: `
-        <div class="onsite-cert-viewer" style="
+        <div style="
           width: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: flex-start;
+          height: 480px;
           overflow: hidden;
-          background: #fff;
-          border-radius: 12px;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-          transform: scale(0.65);
-          transform-origin: top center;
-          margin-bottom: -220px;
-          user-select: none;
-          pointer-events: none;
+          margin-top: 1rem;
         ">
-          <div style="width: 1000px; height: 700px; position: relative;">
+          <div class="onsite-cert-viewer" style="
+            width: 1000px;
+            height: 700px;
+            flex-shrink: 0;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.15);
+            transform: scale(0.65);
+            transform-origin: top center;
+            user-select: none;
+            pointer-events: none;
+            position: relative;
+            border: 1px solid rgba(0,0,0,0.05);
+          ">
             ${certHtml}
           </div>
         </div>
-        <div style="margin-top: 2rem; color: var(--text-sub); font-size: 0.9rem; font-weight: 600;">
+        <div style="margin-top: 2rem; color: var(--text-sub); font-size: 0.9rem; font-weight: 600; line-height: 1.5;">
           🛡️ This is an official onsite-only credential. <br/>
-          Sharing and downloading are restricted to maintain authenticity.
+          <span style="opacity: 0.8;">Sharing and downloading are restricted to maintain authenticity.</span>
         </div>
       `,
       showConfirmButton: false,
       showCloseButton: true,
-      width: '700px',
+      width: '800px',
       background: 'var(--card-bg)',
       customClass: {
         popup: 'premium-onsite-modal'
@@ -123,7 +133,7 @@ const Dashboard = ({
   }, []);
 
   const getAchievements = () => {
-    const xp = user?.xp || 0;
+    const xp = user?.Lms_xp || 0;
     const tiers = [
       { threshold: 100, name: "Starter 🥉", icon: "🥉" },
       { threshold: 500, name: "Scholar 🥈", icon: "🥈" },
@@ -165,13 +175,13 @@ const Dashboard = ({
                 <div className="level-flex-dashboard">
                   <div className="level-text">
                     <span className="level-badge-premium">
-                      LEVEL {Math.floor((user?.xp || 0) / 1000) + 1}
+                      LEVEL {Math.floor((user?.Lms_xp || 0) / 1000) + 1}
                     </span>
                     <h2 style={{ marginTop: "0.5rem" }}>
-                      {user?.xp || 0} XP Total
+                      {user?.Lms_xp || 0} XP Total
                     </h2>
                     <p style={{ color: "var(--text-sub)", fontSize: "0.9rem" }}>
-                      {1000 - ((user?.xp || 0) % 1000)} XP to next milestone
+                      {1000 - ((user?.Lms_xp || 0) % 1000)} XP to next milestone
                     </p>
                   </div>
                   <div
@@ -191,7 +201,7 @@ const Dashboard = ({
                       <div
                         className="xp-bar-fill-premium"
                         style={{
-                          width: `${((user?.xp || 0) % 1000) / 10}%`,
+                          width: `${((user?.Lms_xp || 0) % 1000) / 10}%`,
                           height: "100%",
                           background: "var(--gradient-blue)",
                           transition: "width 1s ease",
@@ -208,10 +218,10 @@ const Dashboard = ({
                       }}
                     >
                       <span>
-                        Level {Math.floor((user?.xp || 0) / 1000) + 1}
+                        Level {Math.floor((user?.Lms_xp || 0) / 1000) + 1}
                       </span>
                       <span>
-                        Level {Math.floor((user?.xp || 0) / 1000) + 2}
+                        Level {Math.floor((user?.Lms_xp || 0) / 1000) + 2}
                       </span>
                     </div>
                   </div>
@@ -325,7 +335,7 @@ const Dashboard = ({
                 </div>
                 <div className="stat-info">
                   <span className="stat-label">Learning Streak</span>
-                  <h2 className="stat-value">{user?.streak || 0} Days</h2>
+                  <h2 className="stat-value">{user?.Lms_streak || 0} Days</h2>
                   <span
                     className="stat-trend"
                     style={{ color: "var(--primary-blue)" }}
@@ -510,7 +520,7 @@ const Dashboard = ({
             </div>
 
             {/* ═══════ TRAINING LEVEL TRACKER ═══════ */}
-            {user?.category &&
+            {user?.Lms_category &&
               (() => {
                 // Roadmap definitions (same as Home.jsx)
                 const ROADMAPS = {
@@ -755,7 +765,7 @@ const Dashboard = ({
                 };
 
                 // Fuzzy find roadmap for user category
-                const uCat = (user.category || "").toLowerCase();
+                const uCat = (user.Lms_category || "").toLowerCase();
                 const rKey = Object.keys(ROADMAPS).find((k) => {
                   const r = k.toLowerCase();
                   return r === uCat || r.includes(uCat) || uCat.includes(r);
@@ -808,8 +818,8 @@ const Dashboard = ({
 
                         // Unlock logic based on PP points as requested
                         let isUnlocked = lIdx === 0;
-                        if (lIdx === 1) isUnlocked = (user?.pp || 0) >= 2000;
-                        if (lIdx === 2) isUnlocked = (user?.pp || 0) >= 4000;
+                        if (lIdx === 1) isUnlocked = (user?.Lms_pp || 0) >= 2000;
+                        if (lIdx === 2) isUnlocked = (user?.Lms_pp || 0) >= 4000;
 
                         const allThisDone =
                           levelCourse && levelCourse.progress_pct >= 100;
@@ -1496,33 +1506,19 @@ const Dashboard = ({
                           title: `<h2 style="color: #1a1a1a; margin-top: 20px;">${ach.name} Achievement</h2>`,
                           html: `
                             <div style="font-size: 80px; margin: 30px 0;">${ach.icon}</div>
-                            <p style="color: #64748b; font-size: 1.1rem; margin-bottom: 30px;">
-                              Congratulations! You've reached <b>${ach.threshold.toLocaleString()} XP</b> and unlocked this prestigious badge.
+                            <p style="color: #64748b; font-size: 1.1rem; margin-bottom: 10px;">
+                              Congratulations! You've reached <b>${ach.threshold.toLocaleString()} XP</b> and unlocked this prestigious tier.
                             </p>
-                            <div style="display: flex; gap: 10px; justify-content: center;">
-                              <button id="share-linkedin" class="swal2-confirm swal2-styled" style="background-color: #0077b5; border-radius: 12px; font-weight: 800; padding: 12px 24px;">
-                                Share on LinkedIn
-                              </button>
-                            </div>
+                            <p style="color: var(--text-sub); font-size: 0.9rem; font-weight: 600;">
+                               🏆 This achievement is part of your professional Oges LMS profile.
+                            </p>
                           `,
-                          showConfirmButton: false,
+                          showConfirmButton: true,
+                          confirmButtonText: 'Great!',
+                          confirmButtonColor: 'var(--primary-blue)',
                           showCloseButton: true,
                           background: "#fff",
                           borderRadius: "24px",
-                          didOpen: () => {
-                            const btn =
-                              document.getElementById("share-linkedin");
-                            if (btn) {
-                              btn.addEventListener("click", () => {
-                                const url = window.location.href;
-                                const text = `I just unlocked the ${ach.name} achievement on OgesLMS! 🚀 #ContinuousLearning #ProfessionalGrowth`;
-                                window.open(
-                                  `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}&title=${encodeURIComponent(text)}`,
-                                  "_blank",
-                                );
-                              });
-                            }
-                          },
                         });
                       }
                     }}
@@ -1599,7 +1595,7 @@ const Dashboard = ({
                 className="badge-showcase-premium"
                 style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}
               >
-                {(user?.badges || "")
+                {(user?.Lms_badges || "")
                   .split(",")
                   .filter(Boolean)
                   .map((b, i) => (
@@ -1619,7 +1615,7 @@ const Dashboard = ({
                       {b}
                     </span>
                   ))}
-                {!user?.badges && (
+                {!user?.Lms_badges && (
                   <p style={{ color: "var(--text-sub)" }}>
                     No community badges earned yet. Complete assignments to earn
                     them!
@@ -1835,120 +1831,134 @@ const Dashboard = ({
                                     display: "none",
                                     width: "1000px",
                                     height: "700px",
-                                    padding: "0",
-                                    backgroundImage:
-                                      'url("/Certificate_Template.png")',
-                                    backgroundSize: "100% 100%",
-                                    backgroundPosition: "center",
                                     position: "relative",
                                     fontFamily: "'Outfit', sans-serif",
                                     textAlign: "center",
                                     color: "#111",
+                                    overflow: "hidden",
+                                    background: "#fff"
                                   }}
                                 >
-                                  {/* Student Name - Centered in the right achievement area */}
-                                  <div
+                                  {/* Base Template Image */}
+                                  <img 
+                                    src="/Certificate_Template.png" 
+                                    alt="Template" 
                                     style={{
                                       position: "absolute",
-                                      top: "280px",
-                                      left: "60%",
-                                      transform: "translateX(-50%)",
-                                      width: "600px",
-                                      fontSize: "48px",
-                                      fontWeight: "900",
-                                      color: "#ea580c",
-                                      textTransform: "uppercase",
-                                      letterSpacing: "2px",
-                                      fontFamily: "'Georgia', serif",
+                                      top: 0,
+                                      left: 0,
+                                      width: "1000px",
+                                      height: "700px",
+                                      objectFit: "cover",
+                                      zIndex: 1
                                     }}
-                                  >
-                                    {user?.full_name || "VALUED LEARNER"}
-                                  </div>
+                                  />
 
-                                  {/* Congratulatory Message */}
-                                  <div
-                                    style={{
-                                      position: "absolute",
-                                      top: "360px",
-                                      left: "60%",
-                                      transform: "translateX(-50%)",
-                                      width: "600px",
-                                      fontSize: "16px",
-                                      fontWeight: "500",
-                                      color: "#475569",
-                                      fontStyle: "italic",
-                                      lineHeight: "1.5",
-                                    }}
-                                  >
-                                    For successfully completing the comprehensive training program<br />
-                                    and demonstrating exceptional proficiency in
-                                  </div>
+                                  {/* Overlay Content */}
+                                  <div style={{ position: "relative", zIndex: 10, height: "100%" }}>
+                                    {/* Student Name */}
+                                    <div
+                                      style={{
+                                        position: "absolute",
+                                        top: "280px",
+                                        left: "63%",
+                                        transform: "translateX(-50%)",
+                                        width: "600px",
+                                        fontSize: "48px",
+                                        fontWeight: "900",
+                                        color: "#f97316",
+                                        textTransform: "uppercase",
+                                        fontFamily: "'Georgia', serif",
+                                        letterSpacing: "1px",
+                                      }}
+                                    >
+                                      {user?.Lms_full_name || "VALUED LEARNER"}
+                                    </div>
 
-                                  {/* Training Title - Highlighted professional course name */}
-                                  <div
-                                    style={{
-                                      position: "absolute",
-                                      top: "430px",
-                                      left: "60%",
-                                      transform: "translateX(-50%)",
-                                      width: "580px",
-                                      fontSize: "26px",
-                                      fontWeight: "800",
-                                      color: "#0f172a",
-                                      lineHeight: "1.2",
-                                    }}
-                                  >
-                                    {course.title}
-                                  </div>
+                                    {/* Message */}
+                                    <div
+                                      style={{
+                                        position: "absolute",
+                                        top: "360px",
+                                        left: "63%",
+                                        transform: "translateX(-50%)",
+                                        width: "550px",
+                                        fontSize: "15px",
+                                        fontWeight: "500",
+                                        color: "#475569",
+                                        fontStyle: "italic",
+                                        lineHeight: "1.4",
+                                      }}
+                                    >
+                                      For successfully completing the comprehensive training program<br />
+                                      and demonstrating exceptional proficiency in
+                                    </div>
 
-                                  {/* Date Issued */}
-                                  <div
-                                    style={{
-                                      position: "absolute",
-                                      bottom: "160px",
-                                      left: "400px",
-                                      width: "200px",
-                                      fontSize: "16px",
-                                      fontWeight: "900",
-                                      color: "#1e1e1e",
-                                      letterSpacing: "1px",
-                                    }}
-                                  >
-                                    {new Date().toLocaleDateString()}
-                                    <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px", fontWeight: "normal" }}>Date Issued</div>
-                                  </div>
+                                    {/* Course Title */}
+                                    <div
+                                      style={{
+                                        position: "absolute",
+                                        top: "430px",
+                                        left: "63%",
+                                        transform: "translateX(-50%)",
+                                        width: "550px",
+                                        fontSize: "30px",
+                                        fontWeight: "800",
+                                        color: "#0f172a",
+                                        lineHeight: "1.2",
+                                        fontFamily: "'Outfit', sans-serif",
+                                      }}
+                                    >
+                                      {course.title}
+                                    </div>
 
-                                  {/* Signature Placeholder */}
-                                  <div
-                                    style={{
-                                      position: "absolute",
-                                      bottom: "160px",
-                                      right: "100px",
-                                      width: "200px",
-                                      fontSize: "20px",
-                                      fontWeight: "900",
-                                      color: "#1e1e1e",
-                                      fontFamily: "'Dancing Script', cursive, serif"
-                                    }}
-                                  >
-                                    Amit Kumar
-                                    <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px", fontWeight: "normal", fontFamily: "'Outfit', sans-serif" }}>Platform Director</div>
-                                  </div>
+                                    {/* Metadata Footer */}
+                                    <div
+                                      style={{
+                                        position: "absolute",
+                                        bottom: "165px",
+                                        left: "400px",
+                                        width: "200px",
+                                        fontSize: "16px",
+                                        fontWeight: "800",
+                                        color: "#1e293b",
+                                      }}
+                                    >
+                                      {new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+                                      <div style={{ fontSize: "11px", color: "#64748b", marginTop: "4px", fontWeight: "600", textTransform: 'uppercase' }}>Date Issued</div>
+                                    </div>
 
-                                  {/* Verify Token - watermark at bottom */}
-                                  <div
-                                    style={{
-                                      position: "absolute",
-                                      bottom: "80px",
-                                      left: "60%",
-                                      transform: "translateX(-50%)",
-                                      fontSize: "9px",
-                                      color: "rgba(0,0,0,0.3)",
-                                      letterSpacing: "0.2em",
-                                      fontWeight: "700",
-                                    }}
-                                  >
-                                    VERIFICATION CODE: CERT-{course.id}-{user?.id || "LE"} • VALID FOR ACADEMIC RECOGNITION
+                                    <div
+                                      style={{
+                                        position: "absolute",
+                                        bottom: "165px",
+                                        right: "80px",
+                                        width: "220px",
+                                        fontSize: "22px",
+                                        fontWeight: "900",
+                                        color: "#1e1e1e",
+                                        fontFamily: "'Dancing Script', cursive, serif"
+                                      }}
+                                    >
+                                      Amit Kumar
+                                      <div style={{ fontSize: "11px", color: "#64748b", marginTop: "4px", fontWeight: "600", fontFamily: "'Outfit', sans-serif", textTransform: 'uppercase' }}>Platform Director</div>
+                                    </div>
+
+                                    {/* Verification Stamp */}
+                                    <div
+                                      style={{
+                                        position: "absolute",
+                                        bottom: "85px",
+                                        left: "63%",
+                                        transform: "translateX(-50%)",
+                                        fontSize: "9px",
+                                        color: "rgba(0,0,0,0.4)",
+                                        letterSpacing: "0.1em",
+                                        fontWeight: "700",
+                                      }}
+                                    >
+                                      VERIFICATION ID: CERT-{course.id}-{user?.id || "LE"} • OGES ACADEMIC RECOGNITION
+                                    </div>
                                   </div>
                                 </div>
                               </div>

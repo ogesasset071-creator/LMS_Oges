@@ -59,11 +59,11 @@ const TutorProfile = () => {
 
           <div className="profile-main-header">
             <div className="profile-avatar-giant">
-              {tutor.avatar ? (
-                <img src={tutor.avatar} alt={tutor.full_name} />
+              {tutor.Lms_avatar ? (
+                <img src={tutor.Lms_avatar} alt={tutor.Lms_full_name} />
               ) : (
                 <div className="avatar-placeholder-giant">
-                  {tutor.full_name?.charAt(0)}
+                  {tutor.Lms_full_name?.charAt(0)}
                 </div>
               )}
               <div className="online-indicator-giant"></div>
@@ -71,9 +71,9 @@ const TutorProfile = () => {
 
             <div className="profile-titles">
               <span className="premium-badge-profile">Training Lead</span>
-              <h1>{tutor.full_name}</h1>
+              <h1>{tutor.Lms_full_name}</h1>
               <p className="profile-tagline text-gradient-orange">
-                {tutor.role === 'admin' ? 'Internal Lead' : 'Training Coordinator'} • {tutor.category || 'General'}
+                {tutor.Lms_role === 'admin' ? 'Internal Lead' : 'Training Coordinator'} • {tutor.Lms_category || 'General'}
               </p>
 
               <div className="profile-quick-stats">
@@ -81,10 +81,10 @@ const TutorProfile = () => {
                   <FiBookOpen /> <span>{courses.length} Modules Published</span>
                 </div>
                 <div className="q-stat-item">
-                  <FiZap /> <span>Expert in {tutor.category || 'Various Fields'}</span>
+                  <FiZap /> <span>Expert in {tutor.Lms_category || 'Various Fields'}</span>
                 </div>
                 <div className="q-stat-item">
-                  <FiMail /> <span>{tutor.email}</span>
+                  <FiMail /> <span>{tutor.Lms_email}</span>
                 </div>
               </div>
             </div>
@@ -97,12 +97,12 @@ const TutorProfile = () => {
           <div className="profile-left-col">
             <section className="profile-bio-card premium-card">
               <h3>Biography</h3>
-              <p>{tutor.bio || "This internal expert is dedicated to sharing knowledge and fostering team growth through structured training modules."}</p>
+              <p>{tutor.Lms_bio || "This internal expert is dedicated to sharing knowledge and fostering team growth through structured training modules."}</p>
 
               <div className="profile-expertise-tags">
                 <span className="exp-tag">Leadership</span>
                 <span className="exp-tag">Training</span>
-                <span className="exp-tag">{tutor.category || 'Consulting'}</span>
+                <span className="exp-tag">{tutor.Lms_category || 'Consulting'}</span>
               </div>
             </section>
 

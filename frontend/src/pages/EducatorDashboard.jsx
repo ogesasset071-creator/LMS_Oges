@@ -377,9 +377,9 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
         const res = await api.get("/user/me");
         setCourseData((prev) => ({
           ...prev,
-          full_name: res.data.full_name || res.data.username || "",
-          bio: res.data.bio || "",
-          avatar: res.data.avatar || "",
+          full_name: res.data.Lms_full_name || res.data.username || "",
+          bio: res.data.Lms_bio || "",
+          avatar: res.data.Lms_avatar || "",
         }));
       } catch (err) {
         console.error("Profile load fail", err);
@@ -388,9 +388,9 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
           const u = JSON.parse(savedUser);
           setCourseData((prev) => ({
             ...prev,
-            full_name: u.full_name || u.username || "",
-            bio: u.bio || "",
-            avatar: u.avatar || "",
+            full_name: u.Lms_full_name || u.username || "",
+            bio: u.Lms_bio || "",
+            avatar: u.Lms_avatar || "",
           }));
         }
       }
@@ -723,9 +723,9 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
     setIsUploading(true);
     try {
       const res = await api.put("/user/profile", {
-        full_name: courseData.full_name,
-        bio: courseData.bio,
-        avatar: courseData.avatar,
+        Lms_full_name: courseData.full_name,
+        Lms_bio: courseData.bio,
+        Lms_avatar: courseData.avatar,
       });
       localStorage.setItem("user", JSON.stringify(res.data));
     } catch (err) {
@@ -765,14 +765,14 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      setCourseData((prev) => ({ ...prev, avatar: res.data.avatar }));
+      setCourseData((prev) => ({ ...prev, avatar: res.data.Lms_avatar }));
 
       const savedUser = localStorage.getItem("user");
       if (savedUser) {
         const u = JSON.parse(savedUser);
         localStorage.setItem(
           "user",
-          JSON.stringify({ ...u, avatar: res.data.avatar }),
+          JSON.stringify({ ...u, avatar: res.data.Lms_avatar }),
         );
       }
 

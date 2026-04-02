@@ -222,6 +222,24 @@ const CATEGORY_ROADMAPS = {
       { name: "Level 3 — Advanced", chapters: ["Scalable High-Load Systems"] },
     ],
   },
+  "Oil and Gas": {
+    courseTitle: "Oil and Gas",
+    icon: "🛢️",
+    levels: [
+      { name: "Level 1 — Beginner", chapters: ["Petroleum Engineering Basics"] },
+      { name: "Level 2 — Intermediate", chapters: ["Drilling & Production"] },
+      { name: "Level 3 — Advanced", chapters: ["Reservoir Simulation, Offshore Tech"] },
+    ],
+  },
+  SaaS: {
+    courseTitle: "SaaS",
+    icon: "🚀",
+    levels: [
+      { name: "Level 1 — Beginner", chapters: ["Cloud Delivery Models"] },
+      { name: "Level 2 — Intermediate", chapters: ["Multi-tenancy Architecture"] },
+      { name: "Level 3 — Advanced", chapters: ["SaaS Business & Scaling"] },
+    ],
+  },
 };
 
 const Home = (props) => {
@@ -243,7 +261,7 @@ const Home = (props) => {
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [matchedCourse, setMatchedCourse] = useState(null); // The course object matching user's category
 
-  const userCategory = props.user?.category || "";
+  const userCategory = props.user?.Lms_category || "";
   // Fuzzy match category against roadmap keys
   const roadmapKey = Object.keys(CATEGORY_ROADMAPS).find((k) => {
     if (!userCategory) return false;
@@ -289,7 +307,7 @@ const Home = (props) => {
     };
     const fetchData = async () => {
       if (props.isLoggedIn) {
-        if (props.user?.role === "admin") {
+        if (props.user?.Lms_role === "admin") {
           try {
             const res = await api.get("/admin/courses");
             setEduCourses(res.data);
@@ -297,7 +315,7 @@ const Home = (props) => {
             console.error(e);
           }
         }
-        if (props.user?.role === "learner") {
+        if (props.user?.Lms_role === "learner") {
           try {
             const res = await api.get("/user/courses");
             setEnrolledCourses(res.data);
@@ -377,7 +395,7 @@ const Home = (props) => {
       <section className="courses-section">
         <div className="courses-container">
           {/* ════════════ 1. RECOMMENDED FOR YOU (ALWAYS ON TOP) ════════════ */}
-          {props.isLoggedIn && props.user?.role === "learner" && (
+          {props.isLoggedIn && props.user?.Lms_role === "learner" && (
             <div
               className="recommended-section-home"
               style={{ marginBottom: "3.5rem" }}
@@ -392,30 +410,30 @@ const Home = (props) => {
                     }}
                   >
                     <span style={{ fontSize: "1.5rem" }}>✨</span> Recommended
-                    for your track: {props.user?.category || "Trainee"}
+                    for your track: {props.user?.Lms_category || "Trainee"}
                   </h2>
                   <p className="section-sub">
                     Training modules tailored to your internal role.
                   </p>
                 </div>
-                {props.user?.category && (
+                {props.user?.Lms_category && (
                   <button
                     className="view-all-btn"
                     onClick={() => {
-                      setActiveTab(props.user.category);
+                      setActiveTab(props.user.Lms_category);
                       const el = document.getElementById("all-tracks-grid");
                       if (el) el.scrollIntoView({ behavior: "smooth" });
                     }}
                   >
-                    Explore more in {props.user.category} →
+                    Explore more in {props.user.Lms_category} →
                   </button>
                 )}
               </div>
               <div className="course-grid-home">
                 {(courses || [])
                   .filter((c) => {
-                    if (!props.user?.category) return false;
-                    const uCat = props.user.category.toLowerCase().trim();
+                    if (!props.user?.Lms_category) return false;
+                    const uCat = props.user.Lms_category.toLowerCase().trim();
                     const cCat = (c.category || "").toLowerCase().trim();
                     return (
                       cCat === uCat ||
@@ -426,16 +444,13 @@ const Home = (props) => {
                   .slice(0, 4)
                   .map((course) => {
                     const cLvl = (course.level || "Beginner").toLowerCase();
-                    const userPP = props.user?.pp || 0;
+                    const userPP = props.user?.Lms_pp || 0;
 
                     let isLocked = false;
-                    let reqPP = 0;
                     if (cLvl === "intermediate") {
                       isLocked = userPP < 2000;
-                      reqPP = 2000;
                     } else if (cLvl === "advanced") {
                       isLocked = userPP < 4000;
-                      reqPP = 4000;
                     }
 
                     return (
@@ -515,8 +530,8 @@ const Home = (props) => {
                     );
                   })}
                 {(courses || []).filter((c) => {
-                  if (!props.user?.category) return false;
-                  const uCat2 = props.user.category.toLowerCase().trim();
+                  if (!props.user?.Lms_category) return false;
+                  const uCat2 = props.user.Lms_category.toLowerCase().trim();
                   const cCat2 = (c.category || "").toLowerCase().trim();
                   return (
                     cCat2 === uCat2 ||
@@ -537,7 +552,7 @@ const Home = (props) => {
                     >
                       <p style={{ color: "var(--text-sub)" }}>
                         No specific modules for{" "}
-                        <strong>{props.user?.category || "your track"}</strong>{" "}
+                        <strong>{props.user?.Lms_category || "your track"}</strong>{" "}
                         yet. Check back later!
                       </p>
                     </div>
@@ -547,7 +562,7 @@ const Home = (props) => {
           )}
 
           {/* ════════════ 2. ROADMAP SECTION ════════════ */}
-          {props.isLoggedIn && props.user?.role === "learner" && roadmap && (
+          {props.isLoggedIn && props.user?.Lms_role === "learner" && roadmap && (
             <div className="roadmap-section">
               <div className="section-header-home">
                 <div>
@@ -573,9 +588,9 @@ const Home = (props) => {
                   // Unlock logic based on PP points (2000 for level 2, 4000 for level 3)
                   let isUnlocked = levelIdx === 0;
                   if (levelIdx === 1)
-                    isUnlocked = (props.user?.pp || 0) >= 2000;
+                    isUnlocked = (props.user?.Lms_pp || 0) >= 2000;
                   if (levelIdx === 2)
-                    isUnlocked = (props.user?.pp || 0) >= 4000;
+                    isUnlocked = (props.user?.Lms_pp || 0) >= 4000;
 
                   const thisLevelDone = level.chapters.every((ch) => {
                     const chObj = matchedCourse?.chapters?.find(
@@ -717,6 +732,82 @@ const Home = (props) => {
               </div>
             </div>
           )}
+
+          {/* ════════════ FEATURED: SAAS & OIL AND GAS ════════════ */}
+          <div className="energy-saas-featured-section" style={{ marginBottom: '4rem', marginTop: '2rem' }}>
+            <div className="section-header-home" style={{ borderLeft: '4px solid #fbcb0e', paddingLeft: '1.2rem' }}>
+              <div>
+                <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <span style={{ fontSize: '1.6rem' }}>⛽</span> Featured: SaaS & Oil and Gas
+                </h2>
+                <p className="section-sub">
+                  Strategic training modules for energy digitalization and cloud-native solutions.
+                </p>
+              </div>
+              <button
+                className="view-all-btn"
+                onClick={() => {
+                  setActiveTab("Oil and Gas");
+                  const el = document.getElementById("all-tracks-grid");
+                  if (el) el.scrollIntoView({ behavior: "smooth" });
+                }}
+              >
+                View Energy Modules →
+              </button>
+            </div>
+            <div className="course-grid-home">
+              {(courses || [])
+                .filter((c) => {
+                  const cat = (c.category || "").toLowerCase();
+                  return cat.includes("oil") || cat.includes("gas") || cat.includes("saas");
+                })
+                .slice(0, 4)
+                .map((course) => (
+                  <div
+                    className="course-card-home"
+                    key={course.id}
+                    onClick={() => navigate(`/player/${course.id}`)}
+                  >
+                    <div className="course-thumb-home">
+                      <img
+                        src={
+                          course.thumbnail ||
+                          "https://images.unsplash.com/photo-1518364538800-6da291ed79a5?w=400"
+                        }
+                        alt={course.title}
+                        onError={(e) => {
+                          e.target.src =
+                          "https://images.unsplash.com/photo-1518364538800-6da291ed79a5?w=400";
+                        }}
+                      />
+                    </div>
+                    <div className="course-body-home">
+                      <h4 className="course-title-home">{course.title}</h4>
+                      <p className="course-instructor-home">
+                        {course.tutor_name || "Enterprise Expert"}
+                      </p>
+                      <div className="course-meta-home">
+                        <span>{course.level || "Specialized"}</span>
+                      </div>
+                      <div className="course-footer-badges">
+                        <span className="course-cat-badge">{course.category}</span>
+                        {course.required_pp > 0 && (
+                          <span className="course-pp-badge">Target: {course.required_pp} PP</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              {(courses || []).filter((c) => {
+                  const cat = (c.category || "").toLowerCase();
+                  return cat.includes("oil") || cat.includes("gas") || cat.includes("saas");
+                }).length === 0 && (
+                <div style={{ gridColumn: '1 / -1', padding: '2rem', textAlign: 'center', background: 'rgba(251, 203, 14, 0.05)', borderRadius: '1rem', border: '1px dashed #fbcb0e' }}>
+                  <p style={{ color: 'var(--text-sub)' }}>No featured modules in this category yet.</p>
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* ════════════ CONTINUE TRAINING ════════════ */}
           {enrolledCourses.length > 0 && (

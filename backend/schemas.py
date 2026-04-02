@@ -18,34 +18,35 @@ class ProgressResponse(BaseModel):
     class Config: from_attributes = True
 
 class UserCreate(BaseModel):
-    full_name: str
-    email: str
+    Lms_full_name: str
+    Lms_email: str
     password: str
-    role: str = "student"
-    category: Optional[str] = ""
+    Lms_role: str = "student"
+    Lms_category: Optional[str] = ""
 
 class LoginRequest(BaseModel):
-    email: str
+    Lms_email: str
     password: str
 
 class UserUpdate(BaseModel):
-    full_name: Optional[str] = None
-    bio: Optional[str] = None
-    avatar: Optional[str] = None
+    Lms_full_name: Optional[str] = None
+    Lms_bio: Optional[str] = None
+    Lms_avatar: Optional[str] = None
+    Lms_category: Optional[str] = None
 
 class Token(BaseModel):
     access_token: str
     token_type: str
-    role: str
-    full_name: str
-    email: str
-    streak: Optional[int] = 0
-    xp: Optional[int] = 0
-    pp: Optional[int] = 0
-    total_minutes: Optional[int] = 0
-    bio: Optional[str] = ""
-    avatar: Optional[str] = ""
-    category: Optional[str] = ""
+    Lms_role: str
+    Lms_full_name: str
+    Lms_email: str
+    Lms_streak: Optional[int] = 0
+    Lms_xp: Optional[int] = 0
+    Lms_pp: Optional[int] = 0
+    Lms_total_minutes: Optional[int] = 0
+    Lms_bio: Optional[str] = ""
+    Lms_avatar: Optional[str] = ""
+    Lms_category: Optional[str] = ""
     progress: List[ProgressResponse] = []
 
 class ChapterSectionBase(BaseModel):
@@ -175,7 +176,7 @@ class AssignmentCreate(BaseModel):
     questions: Optional[List[QuestionSchema]] = []
 
 class ForgotPasswordRequest(BaseModel):
-    email: EmailStr
+    Lms_email: EmailStr
 
 class ResetPasswordRequest(BaseModel):
     token: str
