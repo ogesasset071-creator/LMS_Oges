@@ -21,7 +21,7 @@ class UserCreate(BaseModel):
     Lms_full_name: str
     Lms_email: str
     password: str
-    Lms_role: str = "student"
+    Lms_role: str = "learner"
     Lms_category: Optional[str] = ""
 
 class LoginRequest(BaseModel):
@@ -96,7 +96,7 @@ class CourseResponse(BaseModel):
     level: Optional[str] = "Beginner"
     price: Optional[float] = 0.0
     thumbnail: Optional[str] = None
-    tutor_name: Optional[str] = "Premium Educator"
+    tutor_name: Optional[str] = "Premium Admin"
     chapters: List[ChapterResponse] = []
     units: List[UnitResponse] = []
     resources: List[ResourceResponse] = []

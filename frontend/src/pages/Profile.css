@@ -109,7 +109,7 @@
 }
 
 .role-badge-p.student { background: rgba(251, 146, 60, 0.1); color: var(--primary-blue); border: 1px solid rgba(251, 146, 60, 0.1); }
-.role-badge-p.educator { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.1); }
+.role-badge-p.admin { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.1); }
 .role-badge-p.admin { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.1); }
 
 .username-premium {
@@ -464,8 +464,8 @@
 @keyframes scaleUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
 /* RESPONSIVE */
-/* --- EDUCATOR INSIGHTS --- */
-.educator-insights-card {
+/* --- admin INSIGHTS --- */
+.admin-insights-card {
   margin-top: 1.5rem;
   background: linear-gradient(135deg, rgba(var(--bg-rgb), 0.7) 0%, rgba(var(--primary-blue-rgb), 0.05) 100%);
 }

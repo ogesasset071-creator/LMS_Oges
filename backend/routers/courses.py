@@ -23,8 +23,8 @@ router = APIRouter(tags=["Courses"])
 
 @router.post("/courses", response_model=CourseResponse)
 async def create_course(course_data: CourseCreate, background_tasks: BackgroundTasks, db = Depends(get_db), current_user: User = Depends(get_current_user)):
-    if current_user.Lms_role != "admin" and current_user.Lms_role != "educator":
-        raise HTTPException(status_code=403, detail="Only admins/educators can upload courses")
+    if current_user.Lms_role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can upload courses")
 
     with db.cursor() as cursor:
         cursor.execute("""INSERT INTO Lms_courses (tutor_id, title, description, category, price, thumbnail, is_approved) 
@@ -91,7 +91,7 @@ async def get_courses(page: int = 1, limit: int = 12, category: str = "All", db 
         courses = cursor.fetchall()
         
         for c in courses:
-            c['tutor_name'] = c['tutor_name'] or "Premium Educator"
+            c['tutor_name'] = c['tutor_name'] or "Premium Admin"
     
     return {
         "courses": courses,
@@ -102,7 +102,7 @@ async def get_courses(page: int = 1, limit: int = 12, category: str = "All", db 
 
 @router.get("/admin/courses", response_model=List[CourseResponse])
 async def get_admin_courses(db = Depends(get_db), current_user: User = Depends(get_current_user)):
-    if current_user.Lms_role not in ["admin", "educator"]:
+    if current_user.Lms_role != "admin":
         raise HTTPException(status_code=403, detail="Access denied")
     
     with db.cursor() as cursor:
@@ -122,7 +122,7 @@ async def get_course(course_id: int, db = Depends(get_db)):
         if not course:
             raise HTTPException(status_code=404, detail="Course not found")
         
-        course['tutor_name'] = course['tutor_name'] or "Premium Educator"
+        course['tutor_name'] = course['tutor_name'] or "Premium Admin"
         
         # Units
         cursor.execute("SELECT * FROM Lms_units WHERE course_id = %s ORDER BY order_num", (course_id,))
@@ -281,7 +281,7 @@ async def save_notes(course_id: int, req: NoteCreate, db = Depends(get_db), curr
 
 @router.post("/courses/upload_resource")
 async def upload_course_resource(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
-    if current_user.Lms_role not in ["admin", "educator"]:
+    if current_user.Lms_role != "admin":
         raise HTTPException(status_code=403, detail="Unauthorized")
     upload_dir = "uploads/resources"
     os.makedirs(upload_dir, exist_ok=True)
@@ -294,7 +294,7 @@ async def upload_course_resource(file: UploadFile = File(...), current_user: Use
 
 @router.post("/courses/upload_thumbnail")
 async def upload_course_thumbnail(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
-    if current_user.Lms_role not in ["admin", "educator"]:
+    if current_user.Lms_role != "admin":
         raise HTTPException(status_code=403, detail="Unauthorized")
     upload_dir = "uploads/thumbnails"
     os.makedirs(upload_dir, exist_ok=True)

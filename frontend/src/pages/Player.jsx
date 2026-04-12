@@ -317,7 +317,7 @@ const Player = (props) => {
                 <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
                     <span style={{ fontWeight: 800, color: "var(--primary-blue)", fontSize: '1.25rem', letterSpacing: '-0.02em' }}>
-                      {course.tutor_name || "LMS Oges Expert"}
+                      {course.admin_name || "LMS Oges Expert"}
                     </span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: "var(--text-sub)", fontSize: '0.9rem', fontWeight: 600 }}>
                       <span>{course.category}</span>

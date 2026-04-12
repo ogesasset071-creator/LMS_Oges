@@ -1,0 +1,14 @@
+[2026-04-12 12:48:12.146797] To: admin@oges.com | Subject: Security Alert: New Login to OgesLMS
+Content: 
+    <p>Hello,</p>
+    <p>A new login was detected for your account at 2026-04-12 12:48:12.</p>
+    <p>If this wasn't you, please secure your account immediately.</p>
+    
+--------------------------------------------------
+[2026-04-12 12:49:38.859450] To: learner@oges.com | Subject: Security Alert: New Login to OgesLMS
+Content: 
+    <p>Hello,</p>
+    <p>A new login was detected for your account at 2026-04-12 12:49:38.</p>
+    <p>If this wasn't you, please secure your account immediately.</p>
+    
+--------------------------------------------------

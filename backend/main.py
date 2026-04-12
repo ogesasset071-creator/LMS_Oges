@@ -5,7 +5,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from database import get_db
-from routers import auth, courses, user, shorts
+from routers import auth, courses, user
 
 # Load env
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
@@ -194,7 +194,8 @@ def migrate_db():
                     reward_badge VARCHAR(255),
                     pp_reward INTEGER DEFAULT 50,
                     type VARCHAR(50) DEFAULT 'assignment',
-                    creator_id INTEGER
+                    creator_id INTEGER,
+                    course_id INTEGER
                 )
             """)
             cursor.execute("""
@@ -240,6 +241,8 @@ def migrate_db():
         except: pass
         try: cursor.execute("ALTER TABLE Lms_assignments ADD COLUMN pp_reward INTEGER DEFAULT 50")
         except: pass
+        try: cursor.execute("ALTER TABLE Lms_assignments ADD COLUMN course_id INTEGER")
+        except: pass
         try: cursor.execute("ALTER TABLE Lms_users ADD COLUMN Lms_pp INTEGER DEFAULT 0")
         except: pass
         try: cursor.execute("ALTER TABLE Lms_users ADD COLUMN Lms_streak INTEGER DEFAULT 1")
@@ -272,7 +275,6 @@ app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 app.include_router(auth.router, prefix="/api/auth")
 app.include_router(courses.router, prefix="/api")
 app.include_router(user.router, prefix="/api/user")
-app.include_router(shorts.router, prefix="/api")
 
 # --- HEALTH CHECK ---
 @app.get("/health", tags=["Health"])

@@ -16,7 +16,7 @@ const Assignments = (props) => {
     const [newTitle, setNewTitle] = useState("");
     const [newDesc, setNewDesc] = useState("");
     const [newReward, setNewReward] = useState("");
-    const [newRole, setNewRole] = useState("student");
+    const [newRole, setNewRole] = useState("learner");
     const [submitting, setSubmitting] = useState(false);
 
     // Interactive state for current session
@@ -85,7 +85,7 @@ const Assignments = (props) => {
                             <h1>Platform <span className="text-gradient">Challenges</span></h1>
                             <p>Complete curated tasks to earn exclusive badges and climb the Oges skill ranks.</p>
                         </div>
-                        {(user?.Lms_role === 'educator' || user?.Lms_role === 'admin') && (
+                        {(user?.Lms_role === 'admin' || user?.Lms_role === 'admin') && (
                             <button className="btn-create-assign" onClick={() => setShowCreateModal(true)}>
                                 <FiPlus /> Create New Assignment
                             </button>
@@ -106,13 +106,13 @@ const Assignments = (props) => {
                             assignments.map(a => (
                                 <div className={`assign-card-premium ${a.completed ? 'completed' : ''}`} key={a.id}>
                                     <div className="assign-header">
-                                        <div className={`assign-icon ${a.role === 'educator' ? 'edu' : 'stu'}`}>
-                                            {a.role === 'educator' ? <FiBriefcase /> :
+                                        <div className={`assign-icon ${a.role === 'admin' ? 'edu' : 'stu'}`}>
+                                            {a.role === 'admin' ? <FiBriefcase /> :
                                                 a.title.toLowerCase().includes('coding') ? <FiCode /> :
                                                     (a.title.toLowerCase().includes('mcq') || a.title.toLowerCase().includes('quiz')) ? <FiList /> :
                                                         <FiTarget />}
                                         </div>
-                                        <div className="role-tag">{a.role === 'student' ? 'Student Quest' : 'Educator Goal'}</div>
+                                        <div className="role-tag">{a.role === 'learner' ? 'learner Quest' : 'admin Goal'}</div>
                                     </div>
                                     <div className="assign-body">
                                         <h3>{a.title}</h3>
@@ -145,7 +145,7 @@ const Assignments = (props) => {
                         ) : (
                             <div className="empty-assign-state">
                                 <h2>No active challenges found.</h2>
-                                <p>Check back later or create one if you are an educator!</p>
+                                <p>Check back later or create one if you are an admin!</p>
                             </div>
                         )}
                     </div>
@@ -309,8 +309,8 @@ const Assignments = (props) => {
                             <div className="form-group-p">
                                 <label>Target Role</label>
                                 <select value={newRole} onChange={e => setNewRole(e.target.value)}>
-                                    <option value="student">Students</option>
-                                    <option value="educator">Educators</option>
+                                    <option value="learner">learners</option>
+                                    <option value="admin">admins</option>
                                 </select>
                             </div>
                             <div className="modal-actions-p">

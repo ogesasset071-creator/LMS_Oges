@@ -65,9 +65,9 @@ const VideoCard = ({ lesson, isActive }) => {
           <div className="category-tag">{lesson.category}</div>
           <h3>{lesson.title}</h3>
           <p>{lesson.description}</p>
-          <div className="instructor-row">
+          <div className="admin-row">
             <div className="mini-avatar"><FiUser size={16} /></div>
-            <span>{lesson.instructor}</span>
+            <span>{lesson.admin}</span>
           </div>
         </div>
 

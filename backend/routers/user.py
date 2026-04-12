@@ -68,26 +68,26 @@ async def get_admin_stats(db = Depends(get_db), current_user: User = Depends(get
         raise HTTPException(status_code=403, detail="Not an admin")
     
     with db.cursor() as cursor:
-        # Get all course IDs by this educator
+        # Get all course IDs by this admin
         cursor.execute("SELECT id FROM Lms_courses WHERE tutor_id = %s", (current_user.id,))
         course_ids = [row['id'] for row in cursor.fetchall()]
 
         if not course_ids:
-            return {"total_courses": 0, "total_students": 0, "total_xp_given": 0}
+            return {"total_courses": 0, "total_learners": 0, "total_xp_given": 0}
 
-        # Get total unique students who started any of these courses by counting progress in their chapters
+        # Get total unique learners who started any of these courses by counting progress in their chapters
         # Joining Progress, Chapter to filter by course_ids
-        sql = """SELECT COUNT(DISTINCT p.user_id) as total_students 
+        sql = """SELECT COUNT(DISTINCT p.user_id) as total_learners 
                  FROM Lms_progress p 
                  JOIN Lms_chapters c ON p.lesson_id = c.id 
                  WHERE c.course_id IN %s"""
         cursor.execute(sql, (tuple(course_ids),))
-        total_students = cursor.fetchone()['total_students']
+        total_learners = cursor.fetchone()['total_learners']
     
     return {
         "total_courses": len(course_ids),
-        "total_students": total_students,
-        "total_xp_given": total_students * 50 # simplified
+        "total_learners": total_learners,
+        "total_xp_given": total_learners * 50 # simplified
     }
 
 @router.put("/profile", response_model=Token)
@@ -154,7 +154,7 @@ async def get_my_courses(db = Depends(get_db), current_user: User = Depends(get_
         
         if not all_course_ids: return []
         
-        # Fetch actual course data with educator name
+        # Fetch actual course data with admin name
         sql = """SELECT c.*, u.Lms_full_name as tutor_name 
                  FROM Lms_courses c 
                  LEFT JOIN Lms_users u ON c.tutor_id = u.id 
@@ -177,7 +177,7 @@ async def get_my_courses(db = Depends(get_db), current_user: User = Depends(get_
             done_count = cursor.fetchone()['done'] if ch_ids else 0
             
             c['progress_pct'] = (done_count / len(ch_ids) * 100) if ch_ids else 0.0
-            c['tutor_name'] = c['tutor_name'] or "Premium Educator"
+            c['tutor_name'] = c['tutor_name'] or "Premium Admin"
             res.append(c)
             
     return res
@@ -269,10 +269,10 @@ async def complete_whole_course(course_id: int, background_tasks: BackgroundTask
         cursor.execute("SELECT c.title, u.Lms_email as tutor_email FROM Lms_courses c LEFT JOIN Lms_users u ON c.tutor_id = u.id WHERE c.id = %s", (course_id,))
         course = cursor.fetchone()
         if course:
-            from mail_utils import notify_course_completed, notify_student_completion_to_admin
+            from mail_utils import notify_course_completed, notify_learner_completion_to_admin
             background_tasks.add_task(notify_course_completed, current_user.Lms_email, course['title'])
             if course['tutor_email']:
-                 background_tasks.add_task(notify_student_completion_to_admin, course['tutor_email'], current_user.Lms_full_name, course['title'])
+                 background_tasks.add_task(notify_learner_completion_to_admin, course['tutor_email'], current_user.Lms_full_name, course['title'])
         
         db.commit()
     
@@ -358,7 +358,7 @@ async def get_dashboard_stats(db = Depends(get_db), current_user: User = Depends
                     "title": c['title'],
                     "thumbnail": c['thumbnail'],
                     "progress_pct": pct,
-                    "tutor_name": c['tutor_name'] or "Educator",
+                    "tutor_name": c['tutor_name'] or "Admin",
                 })
 
         cursor.execute("SELECT COUNT(*) as rank_above FROM Lms_users WHERE Lms_xp > %s", (current_user.Lms_xp,))
@@ -403,7 +403,7 @@ async def get_dashboard_stats(db = Depends(get_db), current_user: User = Depends
 
 @router.get("/admin/dashboard/stats")
 async def get_admin_dashboard_stats(db = Depends(get_db), current_user: User = Depends(get_current_user)):
-    if current_user.role not in ["educator", "admin"]:
+    if current_user.Lms_role != "admin":
         raise HTTPException(status_code=403, detail="Not authorized")
     
     with db.cursor() as cursor:
@@ -423,7 +423,7 @@ async def get_admin_dashboard_stats(db = Depends(get_db), current_user: User = D
                  JOIN Lms_courses c ON ch.course_id = c.id 
                  WHERE c.tutor_id = %s"""
         cursor.execute(sql, (current_user.id,))
-        student_count = cursor.fetchone()['cnt']
+        learner_count = cursor.fetchone()['cnt']
 
         from datetime import datetime, timedelta
         seven_days_ago = datetime.utcnow() - timedelta(days=7)
@@ -449,7 +449,7 @@ async def get_admin_dashboard_stats(db = Depends(get_db), current_user: User = D
         "course_count": course_count,
         "assign_count": assign_count,
         "subs_count": subs_count,
-        "student_count": student_count,
+        "learner_count": learner_count,
         "chart_data": chart_data,
         "pie_data": [{"name": row['type'].capitalize(), "value": row['cnt']} for row in rows]
     }
@@ -529,7 +529,7 @@ async def complete_assignment(id: int, background_tasks: BackgroundTasks, db = D
             
         db.commit()
     
-    from mail_utils import notify_assignment_completed, notify_quiz_completed, notify_student_completion_to_admin
+    from mail_utils import notify_assignment_completed, notify_quiz_completed, notify_learner_completion_to_admin
     if assignment['type'] == "quiz":
         background_tasks.add_task(notify_quiz_completed, current_user.Lms_email, assignment['title'])
     else:
@@ -540,13 +540,13 @@ async def complete_assignment(id: int, background_tasks: BackgroundTasks, db = D
             cursor.execute("SELECT Lms_email FROM Lms_users WHERE id = %s", (assignment['creator_id'],))
             creator = cursor.fetchone()
             if creator:
-                background_tasks.add_task(notify_student_completion_to_admin, creator['Lms_email'], current_user.Lms_full_name, assignment['title'])
+                background_tasks.add_task(notify_learner_completion_to_admin, creator['Lms_email'], current_user.Lms_full_name, assignment['title'])
         
     return {"status": "success", "badges": current_user.badges}
 
 @router.post("/admin/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(req: AssignmentCreate, background_tasks: BackgroundTasks, db = Depends(get_db), current_user: User = Depends(get_current_user)):
-    if current_user.Lms_role not in ["educator", "admin"]:
+    if current_user.Lms_role != "admin":
         raise HTTPException(status_code=403, detail="Permission denied")
     
     cat, lvl = req.category, req.level
@@ -582,7 +582,7 @@ async def create_new_assignment(req: AssignmentCreate, background_tasks: Backgro
 
 @router.delete("/admin/assignments/{id}")
 async def delete_assignment(id: int, db = Depends(get_db), current_user: User = Depends(get_current_user)):
-    if current_user.role not in ["educator", "admin"]: raise HTTPException(status_code=403, detail="Permission denied")
+    if current_user.Lms_role != "admin": raise HTTPException(status_code=403, detail="Permission denied")
     with db.cursor() as cursor:
         cursor.execute("SELECT creator_id FROM Lms_assignments WHERE id = %s", (id,))
         a = cursor.fetchone()
@@ -592,9 +592,9 @@ async def delete_assignment(id: int, db = Depends(get_db), current_user: User = 
         db.commit()
     return {"status": "success"}
 
-@router.delete("/admin/assignments/{id}")
-async def delete_assignment(id: int, db = Depends(get_db), current_user: User = Depends(get_current_user)):
-    if current_user.Lms_role not in ["educator", "admin"]: raise HTTPException(status_code=403, detail="Permission denied")
+@router.get("/admin/assignments")
+async def get_admin_assignments(db = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if current_user.Lms_role != "admin": raise HTTPException(status_code=403, detail="Permission denied")
     with db.cursor() as cursor:
         cursor.execute("SELECT * FROM Lms_assignments WHERE creator_id = %s", (current_user.id,))
         assigns = cursor.fetchall()
@@ -605,9 +605,9 @@ async def delete_assignment(id: int, db = Depends(get_db), current_user: User = 
 
 @router.get("/admin/submissions")
 async def get_all_submissions(db = Depends(get_db), current_user: User = Depends(get_current_user)):
-    if current_user.Lms_role not in ["educator", "admin"]: raise HTTPException(status_code=403, detail="Permission denied")
+    if current_user.Lms_role != "admin": raise HTTPException(status_code=403, detail="Permission denied")
     with db.cursor() as cursor:
-        sql = """SELECT ua.*, u.Lms_full_name as student_name, u.Lms_email as student_email, a.title, a.type, a.reward_badge 
+        sql = """SELECT ua.*, u.Lms_full_name as learner_name, u.Lms_email as learner_email, a.title, a.type, a.reward_badge 
                  FROM Lms_user_assignments ua 
                  JOIN Lms_users u ON ua.user_id = u.id 
                  JOIN Lms_assignments a ON ua.assignment_id = a.id 
@@ -615,13 +615,13 @@ async def get_all_submissions(db = Depends(get_db), current_user: User = Depends
         cursor.execute(sql, (current_user.id,))
         uas = cursor.fetchall()
     return [{
-        "id": ua['id'], "type": ua['type'] or "assignment", "student_name": ua['student_name'], "student_email": ua['student_email'],
+        "id": ua['id'], "type": ua['type'] or "assignment", "learner_name": ua['learner_name'], "learner_email": ua['learner_email'],
         "title": ua['title'], "status": ua['status'], "timestamp": ua['timestamp'].isoformat() if ua['timestamp'] else None, "reward": ua['reward_badge']
     } for ua in uas]
 
 @router.get("/admin/completions")
 async def get_admin_course_completions(db = Depends(get_db), current_user: User = Depends(get_current_user)):
-    if current_user.Lms_role not in ["educator", "admin"]: raise HTTPException(status_code=403, detail="Permission denied")
+    if current_user.Lms_role != "admin": raise HTTPException(status_code=403, detail="Permission denied")
     res = []
     with db.cursor() as cursor:
         cursor.execute("SELECT id, title FROM Lms_courses WHERE tutor_id = %s", (current_user.id,))
@@ -637,7 +637,7 @@ async def get_admin_course_completions(db = Depends(get_db), current_user: User 
                      GROUP BY u.id HAVING COUNT(p.id) = %s"""
             cursor.execute(sql, (tuple(ch_ids), len(ch_ids)))
             for u in cursor.fetchall():
-                res.append({"course_title": c['title'], "student_name": u['Lms_full_name'], "student_email": u['Lms_email'], "timestamp": datetime.utcnow().isoformat()})
+                res.append({"course_title": c['title'], "learner_name": u['Lms_full_name'], "learner_email": u['Lms_email'], "timestamp": datetime.utcnow().isoformat()})
     return res
 
 

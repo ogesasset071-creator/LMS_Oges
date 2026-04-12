@@ -47,8 +47,8 @@ const Profile = (props) => {
       setAssignments(assignRes.data);
       if (onUserUpdate) onUserUpdate(meRes.data);
 
-      if (meRes.data.Lms_role === "educator") {
-        const statsRes = await api.get("/educator/stats");
+      if (meRes.data.Lms_role === "admin") {
+        const statsRes = await api.get("/Admin/stats");
         setEduStats(statsRes.data);
       }
     } catch (e) {
@@ -305,14 +305,14 @@ const Profile = (props) => {
             </div>
           </section>
 
-          {user?.Lms_role === "educator" && eduStats && (
-            <section className="profile-section-premium educator-insights-card">
+          {user?.Lms_role === "admin" && eduStats && (
+            <section className="profile-section-premium Admin-insights-card">
               <div className="section-header-premium">
                 <h2 className="section-title-premium">Teaching Insights</h2>
               </div>
               <div className="edu-stats-grid">
                 <div className="edu-insight-item">
-                  <span className="ei-val">{eduStats.total_students}</span>
+                  <span className="ei-val">{eduStats.total_learners}</span>
                   <span className="ei-label">Active Learners</span>
                 </div>
                 <div className="edu-insight-item">

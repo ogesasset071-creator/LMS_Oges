@@ -260,7 +260,7 @@ const AdminPanel = ({ onLogout }) => {
                 <tbody>
                   {[
                     { name: 'Dr. James Wilson', role: 'Full Access', count: 12 },
-                    { name: 'Sarah Connor', role: 'Lead Educator', count: 8 },
+                    { name: 'Sarah Connor', role: 'Lead admin', count: 8 },
                     { name: 'Michael Scott', role: 'Department Head', count: 22 }
                   ].map((adm, i) => (
                     <tr key={i}>
