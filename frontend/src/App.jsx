@@ -18,7 +18,7 @@ import Profile from "./pages/Profile";
 import AdminDashboard from "./pages/AdminDashboard";
 import Dashboard from "./pages/Dashboard";
 import Assignments from "./pages/Assignments";
-import Learning from "./pages/Learning";
+
 import AdminPanel from "./pages/AdminPanel";
 import Player from "./pages/Player";
 import AssignmentDetails from "./pages/AssignmentDetails";
@@ -183,7 +183,7 @@ function AppContent() {
     onHomeClick: (path = "/") =>
       navigate(typeof path === "string" ? path : "/"),
     onDashboardClick: () => navigate("/dashboard"),
-    onPulseClick: () => navigate("/learning"),
+
     onExploreClick: () => navigate("/courses"),
     onCategoriesClick: () => navigate("/categories"),
     onAdminsClick: () => navigate("/admins"),
@@ -280,7 +280,6 @@ function AppContent() {
           path="/assignments"
           element={<Assignments {...commonNavProps} />}
         />
-        <Route path="/learning" element={<Learning {...commonNavProps} />} />
         <Route
           path="/assignment/:id"
           element={

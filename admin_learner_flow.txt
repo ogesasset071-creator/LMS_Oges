@@ -1,0 +1,160 @@
+PLATFORM OVERVIEW
+This platform is an LMS for internal training and skill development.
+It helps trainers manage courses, assignments, quizzes, submissions, announcements, and learner progress.
+It helps learners discover trainings, watch lessons, save notes, use resources, complete assignments, track progress, and earn certificates.
+
+ADMIN FLOW
+Landing on the admin dashboard with overall platform stats, training activity, assessment activity, submissions, completions, and performance insights.
+Moving between Dashboard, All Trainings, My Assignments, Submissions, Graduates, Upload Training, Upload Assignment, Upload Quiz, and Profile.
+Opening All Trainings to view the full training list.
+Searching trainings.
+Filtering trainings by category.
+Filtering trainings by level.
+Opening training details from the list.
+Opening edit training from the list.
+Deleting a training from the list.
+Creating a new training from Upload Training.
+Entering training title, description, category, level, language, thumbnail, and trainer details.
+Uploading a training thumbnail.
+Adding units inside a training.
+Adding chapters inside each unit.
+Entering chapter title, video URL, duration, description, content type, and sections.
+Attaching chapter resources.
+Uploading learning resource files.
+Saving a new training.
+Updating an existing training.
+Opening Training Details for any training.
+Reviewing curriculum from the training details screen.
+Previewing training content and lessons.
+Posting announcements for a training.
+Reading existing announcements for a training.
+Returning from training details to the training list.
+Jumping from training details to edit mode for the same training.
+Opening My Assignments to view all created assignments and quizzes.
+Creating a normal assignment.
+Creating a quiz.
+Editing an existing assignment or quiz.
+Deleting an existing assignment or quiz.
+Entering assignment or quiz title, description, reward, type, and target details.
+Adding questions to quizzes or assignments.
+Defining MCQ questions.
+Defining short answer questions.
+Entering options for MCQ questions.
+Publishing an assignment.
+Publishing a quiz.
+Opening Submissions to review learner submissions.
+Viewing submission records for assessments.
+Checking learner name, assignment or quiz details, status, score, and progress where available.
+Opening Graduates to review learners who completed trainings.
+Viewing completion records and graduate related data.
+Managing public instructor profile information from Profile.
+Updating full name.
+Updating bio.
+Updating avatar or profile image.
+Cropping the profile image before saving.
+Saving profile changes.
+Opening the general home page and viewing owned or accessible training cards.
+Opening course cards from home.
+Viewing the public courses listing.
+Opening categories and browsing category wise training discovery.
+Opening the trainer listing page.
+Opening a specific tutor profile and viewing that tutor’s courses.
+Opening the common assignments page and creating assignments from there as well.
+Starting and inspecting assignment details from the common assignments flow.
+Opening the player for course preview.
+Logging out after work is complete.
+
+LEARNER FLOW
+Landing on the home page and entering the learning portal.
+Viewing recommended trainings based on category or personal track.
+Opening a recommended course directly from home.
+Seeing locked and unlocked recommendations based on progress points.
+Using the roadmap section to follow category based learning levels.
+Opening the matched roadmap course from the roadmap section.
+Continuing previously started trainings from the continue training area.
+Browsing the full training catalog from home.
+Filtering home page trainings by category.
+Filtering home page trainings by level.
+Opening any visible course card from home.
+Moving to the Courses page for full catalog browsing.
+Searching trainings on the Courses page.
+Filtering trainings by category on the Courses page.
+Loading more trainings through pagination.
+Opening any training from the Courses page.
+Opening the Categories page and browsing category wise training groups.
+Choosing a category and moving to the filtered courses listing.
+Opening the Admins page and browsing training leads or tutors.
+Opening a specific tutor profile.
+Viewing trainings associated with a tutor profile.
+Opening a tutor course from the tutor profile page.
+Opening the player page for a selected training.
+Watching the lesson video in the player.
+Switching between chapters inside a training.
+Switching between units and chapters when the course is structured in units.
+Earning progress and points while watching videos.
+Recording activity automatically after watch time starts.
+Recording progress heartbeat while a lesson remains active.
+Adding the current training to My Training from the player.
+Moving between Content, Notes, and Resources tabs inside the player.
+Reading training description and instructor information in the player.
+Writing private notes for the current training.
+Saving private notes for the current training.
+Opening lesson specific resources.
+Opening course level resources.
+Downloading or viewing provided study materials.
+Uploading personal private study materials for the current training.
+Giving a title to personal private materials.
+Viewing previously uploaded private materials.
+Claiming certificate eligibility when required progress points are reached.
+Marking the full course complete through the certificate action.
+Getting redirected to the dashboard after course completion for certificate.
+Opening the main dashboard.
+Viewing dashboard summary including XP, level, streak, enrolled trainings, completed trainings, rank, recent learning, activity chart, and skills overview.
+Continuing recent courses from the dashboard.
+Opening My Training inside the dashboard.
+Viewing active trainings in My Training.
+Viewing completed trainings in certification related sections.
+Continuing any ongoing training from My Training.
+Opening Assignments inside the dashboard.
+Viewing available assignments.
+Opening a specific assignment from the dashboard.
+Opening the separate Assignments page and browsing all available platform challenges.
+Starting an assignment or challenge.
+Entering the challenge start step.
+Answering MCQ questions.
+Answering short answer questions.
+Moving to the coding round when the assignment includes coding.
+Writing code in the coding round text area.
+Submitting the final challenge.
+Completing an assignment and receiving reward badge status.
+Opening the assignment details page directly for an assignment.
+Reviewing assignment details on the assignment details page.
+Completing an assignment from the assignment details page.
+Opening Quizzes inside the dashboard.
+Reviewing quiz related progress and challenge area through the dashboard quiz section.
+Opening Achievements inside the dashboard.
+Viewing unlocked and locked achievement tiers based on XP.
+Opening Certifications inside the dashboard.
+Viewing earned certificates for completed trainings.
+Opening certificate preview for a completed course.
+Viewing active learning tracks that are still incomplete.
+Resuming an active track from the certifications area.
+Opening the profile page.
+Viewing profile identity details, avatar, role, email handle, category, bio, badges, streak, total learning minutes, and total XP.
+Opening edit profile from the profile page.
+Updating full name from the profile page.
+Updating learning category from the profile page.
+Updating bio from the profile page.
+Uploading a new avatar from the profile page.
+Cropping the avatar before saving.
+Saving profile changes.
+Switching between ongoing and completed courses inside the profile page.
+Opening any course from the profile page.
+Opening certificate preview from the profile page.
+Viewing XP achievement tiers in the profile page.
+Viewing available community tasks in the profile page.
+Completing community tasks from the profile page when available.
+Tracking session time while logged in.
+Checking inactivity while not actively watching video and logging out after inactivity timeout flow.
+Toggling theme in navigation and dashboard areas where available.
+Logging out after finishing learning activities.
