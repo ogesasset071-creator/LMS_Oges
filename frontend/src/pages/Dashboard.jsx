@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import "./EducatorDashboard.css"; // Reuse the clean sidebar layout
+import "./adminDashboard.css"; // Reuse the clean sidebar layout
 import Navbar from "../components/Navbar";
 import api from "../services/api";
 import {
@@ -1856,7 +1856,7 @@ const Dashboard = ({
 
                                   {/* Overlay Content */}
                                   <div style={{ position: "relative", zIndex: 10, height: "100%" }}>
-                                    {/* Student Name */}
+                                    {/* learner Name */}
                                     <div
                                       style={{
                                         position: "absolute",

@@ -13,17 +13,17 @@ import Auth from "./pages/Auth";
 import Home from "./pages/Home";
 import Courses from "./pages/Courses";
 import Categories from "./pages/Categories";
-import Admins from "./pages/Tutors";
+import Admins from "./pages/Admins";
 import Profile from "./pages/Profile";
-import AdminDashboard from "./pages/EducatorDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import Dashboard from "./pages/Dashboard";
 import Assignments from "./pages/Assignments";
-import Learning from "./pages/Learning";
+
 import AdminPanel from "./pages/AdminPanel";
 import Player from "./pages/Player";
 import AssignmentDetails from "./pages/AssignmentDetails";
 import Navbar from "./components/Navbar";
-import TutorProfile from "./pages/TutorProfile";
+import AdminProfile from "./pages/AdminProfile";
 import ResetPassword from "./pages/ResetPassword";
 import api from "./services/api";
 
@@ -76,7 +76,7 @@ function AppContent() {
   const [isShowingIdlePopup, setIsShowingIdlePopup] = useState(false);
 
   useEffect(() => {
-    if (!isLoggedIn || (user?.Lms_role !== "student" && user?.Lms_role !== "learner"))
+    if (!isLoggedIn || user?.Lms_role !== "learner")
       return;
 
     const handleActivity = () => {
@@ -106,7 +106,7 @@ function AppContent() {
   useEffect(() => {
     if (
       !isLoggedIn ||
-      (user?.Lms_role !== "student" && user?.Lms_role !== "learner") ||
+      user?.Lms_role !== "learner" ||
       isGlobalVideoPlaying
     )
       return;
@@ -173,7 +173,7 @@ function AppContent() {
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
     localStorage.setItem("token", userData.access_token);
-    if (userData.Lms_role === "admin" || userData.Lms_role === "educator")
+    if (userData.Lms_role === "admin")
       navigate("/admin");
     else navigate("/");
   };
@@ -183,10 +183,10 @@ function AppContent() {
     onHomeClick: (path = "/") =>
       navigate(typeof path === "string" ? path : "/"),
     onDashboardClick: () => navigate("/dashboard"),
-    onPulseClick: () => navigate("/learning"),
+
     onExploreClick: () => navigate("/courses"),
     onCategoriesClick: () => navigate("/categories"),
-    onTutorsClick: () => navigate("/admins"),
+    onAdminsClick: () => navigate("/admins"),
     onLoginClick: () => navigate("/login"),
     onLogout: logout,
     isLoggedIn,
@@ -262,7 +262,7 @@ function AppContent() {
         <Route path="/admins" element={<Admins {...commonNavProps} />} />
         <Route
           path="/tutor/:id"
-          element={<TutorProfile {...commonNavProps} />}
+          element={<AdminProfile {...commonNavProps} />}
         />
         <Route
           path="/profile"
@@ -280,7 +280,6 @@ function AppContent() {
           path="/assignments"
           element={<Assignments {...commonNavProps} />}
         />
-        <Route path="/learning" element={<Learning {...commonNavProps} />} />
         <Route
           path="/assignment/:id"
           element={

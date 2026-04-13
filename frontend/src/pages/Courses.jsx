@@ -160,7 +160,7 @@ const Courses = () => {
                         <div className="p-card-body">
                           <div className="p-category-tag">{course.category}</div>
                           <h4>{course.title}</h4>
-                          <p className="p-instructor">By {course.tutor_name || "Internal Expert"}</p>
+                          <p className="p-admin">By {course.admin_name || "Internal Expert"}</p>
 
                           <div className="p-footer-perks">
                             <span><FiBookOpen /> {chapCount} Chapters</span>

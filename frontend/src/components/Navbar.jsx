@@ -120,9 +120,7 @@ const Navbar = ({
               </div>
             )}
           </div>
-          {/* <button className={`nav-link ${location.pathname === '/learning' ? 'active ' : ''}pulse-highlight`} onClick={onPulseClick}>
-            Pulse
-          </button> */}
+
 
           {isLoggedIn && (
             <>

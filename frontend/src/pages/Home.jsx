@@ -254,8 +254,8 @@ const Home = (props) => {
   const levelOptions = ["All", "Beginner", "Intermediate", "Advanced"];
   const [stats, setStats] = useState({
     courses: 0,
-    students: 0,
-    instructors: 0,
+    learners: 0,
+    admins: 0,
   });
   const [eduCourses, setEduCourses] = useState([]);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
@@ -509,8 +509,8 @@ const Home = (props) => {
                         </div>
                         <div className="course-body-home">
                           <h4 className="course-title-home">{course.title}</h4>
-                          <p className="course-instructor-home">
-                            {course.tutor_name || "Internal Expert"}
+                          <p className="course-admin-home">
+                            {course.admin_name || "Internal Expert"}
                           </p>
                           <div className="course-meta-home">
                             <span className="chapter-count">
@@ -783,8 +783,8 @@ const Home = (props) => {
                     </div>
                     <div className="course-body-home">
                       <h4 className="course-title-home">{course.title}</h4>
-                      <p className="course-instructor-home">
-                        {course.tutor_name || "Enterprise Expert"}
+                      <p className="course-admin-home">
+                        {course.admin_name || "Enterprise Expert"}
                       </p>
                       <div className="course-meta-home">
                         <span>{course.level || "Specialized"}</span>
@@ -811,7 +811,7 @@ const Home = (props) => {
 
           {/* ════════════ CONTINUE TRAINING ════════════ */}
           {enrolledCourses.length > 0 && (
-            <div className="student-personal-section">
+            <div className="learner-personal-section">
               <div className="section-header-home">
                 <h2>Continue Your Training</h2>
                 <button
@@ -968,8 +968,8 @@ const Home = (props) => {
                   </div>
                   <div className="course-body-home">
                     <h4 className="course-title-home">{course.title}</h4>
-                    <p className="course-instructor-home">
-                      {course.tutor_name || "Internal Expert"}
+                    <p className="course-admin-home">
+                      {course.admin_name || "Internal Expert"}
                     </p>
                     <div className="course-meta-home">
                       <span className="chapter-count">
