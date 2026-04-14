@@ -32,12 +32,7 @@ const Footer = () => {
               Empowering learners with a gamified, high-performance education
               platform. Master new skills through immersive, short-form content.
             </p>
-            <div className="footer-contact-info">
-              <div className="contact-row">
-                <FiMail size={16} />
-                <a href="mailto:satyam.soni@oges.co">satyam.soni@oges.co</a>
-              </div>
-            </div>
+          
           </div>
 
           <div className="footer-links-col">

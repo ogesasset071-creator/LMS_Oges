@@ -92,12 +92,14 @@ async def get_admin_stats(db = Depends(get_db), current_user: User = Depends(get
 
 @router.put("/profile", response_model=Token)
 async def update_profile(req: UserUpdate, db = Depends(get_db), current_user: User = Depends(get_current_user)):
-    bio = req.bio if req.bio is not None else current_user.Lms_bio
-    full_name = req.full_name if req.full_name is not None else current_user.Lms_full_name
-    avatar = req.avatar if req.avatar is not None else current_user.Lms_avatar
+    bio = req.Lms_bio if req.Lms_bio is not None else current_user.Lms_bio
+    full_name = req.Lms_full_name if req.Lms_full_name is not None else current_user.Lms_full_name
+    avatar = req.Lms_avatar if req.Lms_avatar is not None else current_user.Lms_avatar
+    category = req.Lms_category if req.Lms_category is not None else current_user.Lms_category
     
     with db.cursor() as cursor:
-        cursor.execute("UPDATE Lms_users SET Lms_full_name = %s, Lms_bio = %s, Lms_avatar = %s WHERE id = %s", (full_name, bio, avatar, current_user.id))
+        cursor.execute("UPDATE Lms_users SET Lms_full_name = %s, Lms_bio = %s, Lms_avatar = %s, Lms_category = %s WHERE id = %s", 
+                       (full_name, bio, avatar, category, current_user.id))
         db.commit()
     
     token = create_access_token({"sub": current_user.Lms_email, "role": current_user.Lms_role})
@@ -109,10 +111,11 @@ async def update_profile(req: UserUpdate, db = Depends(get_db), current_user: Us
         "Lms_email": current_user.Lms_email,
         "Lms_streak": current_user.Lms_streak or 0,
         "Lms_xp": current_user.Lms_xp or 0,
+        "Lms_pp": current_user.Lms_pp or 0,
         "Lms_total_minutes": current_user.Lms_total_minutes or 0,
         "Lms_bio": bio or "",
         "Lms_avatar": avatar or "",
-        "Lms_category": current_user.Lms_category or ""
+        "Lms_category": category or ""
     }
 
 @router.post("/avatar")
@@ -640,6 +643,232 @@ async def get_admin_course_completions(db = Depends(get_db), current_user: User 
                 res.append({"course_title": c['title'], "learner_name": u['Lms_full_name'], "learner_email": u['Lms_email'], "timestamp": datetime.utcnow().isoformat()})
     return res
 
+@router.get("/admin/employees")
+async def get_all_employees(db = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if current_user.Lms_role != "admin": raise HTTPException(status_code=403, detail="Permission denied")
+    with db.cursor() as cursor:
+        cursor.execute("SELECT id, Lms_email, Lms_full_name, Lms_xp, Lms_pp, Lms_role, Lms_category FROM Lms_users WHERE Lms_role != 'admin' ORDER BY Lms_xp DESC")
+        users = cursor.fetchall()
+    
+    # Calculate Levels and reformat somewhat safely
+    res = []
+    for u in users:
+        xp = u.get('Lms_xp') or 0
+        level = (xp // 1000) + 1
+        res.append({
+            "id": u['id'],
+            "email": u['Lms_email'],
+            "full_name": u['Lms_full_name'] or "Unnamed Employee",
+            "xp": xp,
+            "pp": u.get('Lms_pp') or 0,
+            "level": level,
+            "role": u['Lms_role'] or 'learner',
+            "category": u.get('Lms_category') or 'General',
+            "badges": u.get('Lms_badges') or '',
+            "joined": None
+        })
+    return res
 
+@router.delete("/admin/assignments/{id}")
+async def delete_assignment(id: int, db = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if current_user.Lms_role != "admin": raise HTTPException(status_code=403, detail="Permission denied")
+    with db.cursor() as cursor:
+        cursor.execute("SELECT creator_id FROM Lms_assignments WHERE id = %s", (id,))
+        a = cursor.fetchone()
+        if not a: raise HTTPException(status_code=404, detail="Not found")
+        if a['creator_id'] != current_user.id and current_user.Lms_role != "admin": raise HTTPException(status_code=403, detail="Not authorized")
+        cursor.execute("DELETE FROM Lms_assignments WHERE id = %s", (id,))
+        db.commit()
+    return {"status": "success"}
 
+@router.get("/admin/assignments")
+async def get_admin_assignments(db = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if current_user.Lms_role != "admin": raise HTTPException(status_code=403, detail="Permission denied")
+    with db.cursor() as cursor:
+        cursor.execute("SELECT * FROM Lms_assignments WHERE creator_id = %s", (current_user.id,))
+        assigns = cursor.fetchall()
+        for a in assigns:
+            cursor.execute("SELECT * FROM Lms_assignment_questions WHERE assignment_id = %s", (a['id'],))
+            a['questions'] = cursor.fetchall()
+    return assigns
+
+@router.get("/admin/submissions")
+async def get_all_submissions(db = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if current_user.Lms_role != "admin": raise HTTPException(status_code=403, detail="Permission denied")
+    with db.cursor() as cursor:
+        sql = """SELECT ua.*, u.Lms_full_name as learner_name, u.Lms_email as learner_email, a.title, a.type, a.reward_badge 
+                 FROM Lms_user_assignments ua 
+                 JOIN Lms_users u ON ua.user_id = u.id 
+                 JOIN Lms_assignments a ON ua.assignment_id = a.id 
+                 WHERE a.creator_id = %s"""
+        cursor.execute(sql, (current_user.id,))
+        uas = cursor.fetchall()
+    return [{
+        "id": ua['id'], "type": ua['type'] or "assignment", "learner_name": ua['learner_name'], "learner_email": ua['learner_email'],
+        "title": ua['title'], "status": ua['status'], "timestamp": ua['timestamp'].isoformat() if ua['timestamp'] else None, "reward": ua['reward_badge']
+    } for ua in uas]
+
+@router.get("/admin/completions")
+async def get_admin_course_completions(db = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if current_user.Lms_role != "admin": raise HTTPException(status_code=403, detail="Permission denied")
+    res = []
+    with db.cursor() as cursor:
+        cursor.execute("SELECT id, title FROM Lms_courses WHERE tutor_id = %s", (current_user.id,))
+        my_courses = cursor.fetchall()
+        for c in my_courses:
+            cursor.execute("SELECT id FROM Lms_chapters WHERE course_id = %s", (c['id'],))
+            ch_ids = [ch['id'] for ch in cursor.fetchall()]
+            if not ch_ids: continue
+            sql = """SELECT u.Lms_full_name, u.Lms_email 
+                     FROM Lms_users u 
+                     JOIN Lms_progress p ON u.id = p.user_id 
+                     WHERE p.lesson_id IN %s AND p.completed = TRUE 
+                     GROUP BY u.id HAVING COUNT(p.id) = %s"""
+            cursor.execute(sql, (tuple(ch_ids), len(ch_ids)))
+            for u in cursor.fetchall():
+                res.append({"course_title": c['title'], "learner_name": u['Lms_full_name'], "learner_email": u['Lms_email'], "timestamp": datetime.utcnow().isoformat()})
+    return res
+
+@router.get("/admin/employees")
+async def get_all_employees(db = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if current_user.Lms_role != "admin": raise HTTPException(status_code=403, detail="Permission denied")
+    with db.cursor() as cursor:
+        cursor.execute("SELECT id, Lms_email, Lms_full_name, Lms_xp, Lms_pp, Lms_role, Lms_category, Lms_badges FROM Lms_users WHERE Lms_role != 'admin' ORDER BY Lms_xp DESC")
+        users = cursor.fetchall()
+    
+    # Calculate Levels and reformat somewhat safely
+    res = []
+    for u in users:
+        xp = u.get('Lms_xp') or 0
+        level = (xp // 1000) + 1
+        res.append({
+            "id": u['id'],
+            "email": u['Lms_email'],
+            "full_name": u['Lms_full_name'] or "Unnamed Employee",
+            "xp": xp,
+            "pp": u.get('Lms_pp') or 0,
+            "level": level,
+            "role": u['Lms_role'] or 'learner',
+            "category": u.get('Lms_category') or 'General',
+            "badges": u.get('Lms_badges') or '',
+            "joined": None
+        })
+    return res
+
+@router.get("/admin/employees/{employee_id}")
+async def get_employee_details(employee_id: int, db = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if current_user.Lms_role != "admin": raise HTTPException(status_code=403, detail="Permission denied")
+    with db.cursor() as cursor:
+        cursor.execute("SELECT id, Lms_email, Lms_full_name, Lms_xp, Lms_pp, Lms_role, Lms_category, Lms_streak, Lms_total_minutes, Lms_bio, Lms_badges FROM Lms_users WHERE id = %s", (employee_id,))
+        emp = cursor.fetchone()
+        if not emp:
+            raise HTTPException(status_code=404, detail="Employee not found")
+        
+        # Get submissions
+        cursor.execute("""
+            SELECT ua.*, a.title, a.type, a.reward_badge 
+            FROM Lms_user_assignments ua 
+            JOIN Lms_assignments a ON ua.assignment_id = a.id 
+            WHERE ua.user_id = %s
+        """, (employee_id,))
+        submissions = cursor.fetchall()
+        
+        # Get progress
+        cursor.execute("""
+            SELECT p.*, c.title as chapter_title, co.title as course_title
+            FROM Lms_progress p
+            JOIN Lms_chapters c ON p.lesson_id = c.id
+            JOIN Lms_courses co ON c.course_id = co.id
+            WHERE p.user_id = %s
+        """, (employee_id,))
+        progress = cursor.fetchall()
+
+    return {
+        "profile": {
+            "id": emp['id'],
+            "email": emp['Lms_email'],
+            "full_name": emp['Lms_full_name'] or "Unnamed",
+            "xp": emp['Lms_xp'] or 0,
+            "pp": emp['Lms_pp'] or 0,
+            "level": ((emp['Lms_xp'] or 0) // 1000) + 1,
+            "role": emp['Lms_role'] or 'learner',
+            "category": emp['Lms_category'] or 'General',
+            "streak": emp['Lms_streak'] or 0,
+            "total_minutes": emp['Lms_total_minutes'] or 0,
+            "bio": emp['Lms_bio'] or "",
+            "badges": emp['Lms_badges'] or ""
+        },
+        "submissions": [
+            {
+                "id": sub['id'],
+                "title": sub['title'],
+                "type": sub['type'],
+                "reward_badge": sub['reward_badge'],
+                "status": sub['status'],
+                "timestamp": sub.get('timestamp').isoformat() if sub.get('timestamp') else None
+            } for sub in submissions
+        ],
+        "progress": [
+            {
+                "id": prg['id'],
+                "course_title": prg['course_title'],
+                "chapter_title": prg['chapter_title'],
+                "completed": prg['completed'],
+                "timestamp": prg.get('timestamp').isoformat() if prg.get('timestamp') else None
+            } for prg in progress
+        ]
+    }
+
+from pydantic import BaseModel
+
+class AdminEmployeeUpdate(BaseModel):
+    Lms_full_name: str = None
+    Lms_email: str = None
+    Lms_role: str = None
+    Lms_category: str = None
+    Lms_xp: int = None
+    Lms_pp: int = None
+    Lms_badges: str = None
+
+@router.put("/admin/employees/{employee_id}")
+async def update_employee_details(employee_id: int, req: AdminEmployeeUpdate, db = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if current_user.Lms_role != "admin": raise HTTPException(status_code=403, detail="Permission denied")
+    
+    with db.cursor() as cursor:
+        cursor.execute("SELECT id FROM Lms_users WHERE id = %s", (employee_id,))
+        emp = cursor.fetchone()
+        if not emp:
+            raise HTTPException(status_code=404, detail="Employee not found")
+        
+        updates = []
+        params = []
+        if req.Lms_full_name is not None:
+            updates.append("Lms_full_name = %s")
+            params.append(req.Lms_full_name)
+        if req.Lms_email is not None:
+            updates.append("Lms_email = %s")
+            params.append(req.Lms_email)
+        if req.Lms_role is not None:
+            updates.append("Lms_role = %s")
+            params.append(req.Lms_role)
+        if req.Lms_category is not None:
+            updates.append("Lms_category = %s")
+            params.append(req.Lms_category)
+        if req.Lms_xp is not None:
+            updates.append("Lms_xp = %s")
+            params.append(req.Lms_xp)
+        if req.Lms_pp is not None:
+            updates.append("Lms_pp = %s")
+            params.append(req.Lms_pp)
+        if req.Lms_badges is not None:
+            updates.append("Lms_badges = %s")
+            params.append(req.Lms_badges)
+            
+        if updates:
+            query = "UPDATE Lms_users SET " + ", ".join(updates) + " WHERE id = %s"
+            params.append(employee_id)
+            cursor.execute(query, tuple(params))
+            db.commit()
+            
+    return {"status": "success", "message": "Employee updated successfully"}
 

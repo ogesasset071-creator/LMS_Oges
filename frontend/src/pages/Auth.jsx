@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './Auth.css';
-import { FiBookOpen, FiBriefcase, FiSun, FiMoon, FiEye, FiEyeOff } from "react-icons/fi";
+import { FiBookOpen, FiBriefcase, FiSun, FiMoon, FiEye, FiEyeOff, FiCheckCircle, FiMail, FiLock, FiShield } from "react-icons/fi";
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import api from "../services/api";
@@ -100,30 +100,36 @@ const Auth = ({ onAuthSuccess, initialIsLogin = true, isDarkMode, onToggleTheme 
             </div>
             <main className="auth-container">
                 <div className="auth-visual-panel">
-                    <div className="visual-top-brand">
-                        <img src={logo} alt="Oges" className="auth-panel-logo" />
-                        <span className="brand-divider">|</span>
-                        <span className="brand-subname">LMS</span>
-                    </div>
-                    
-                    <div className="visual-hero-text">
-                        <h2>Oges Internal <br/>Learning Ecosystem.</h2>
-                        <p>Our proprietary platform for workforce development. Access specialized modules, track professional milestones, and earn certifications recognized within the Oges network.</p>
+                    <div>
+                        <div className="visual-top-brand">
+                            <img src={logo} alt="Oges" className="auth-panel-logo" />
+                        </div>
+                        
+                        <div className="visual-hero-text">
+                            <h2>Learning <br/>Management<br/><span style={{color: 'var(--primary-orange, #f97316)'}}>System</span></h2>
+                            <p style={{fontSize: '1rem', fontWeight: '500', opacity: '0.9', marginTop: '-1rem'}}>Synchronize Your Learning, Simplify Your Progress.</p>
+                        </div>
+
+                        <div className="visual-features-list">
+                            <ul>
+                                <li><FiCheckCircle color="#ef4444" size={18} /> Smart Learning Tracking System</li>
+                                <li><FiCheckCircle color="#ef4444" size={18} /> Role-Based Access Control</li>
+                                <li><FiCheckCircle color="#ef4444" size={18} /> Assignment / Quiz Automation</li>
+                                <li><FiCheckCircle color="#ef4444" size={18} /> Secure Login & Permissions</li>
+                            </ul>
+                        </div>
                     </div>
 
-                    <div className="visual-bottom-card">
-                        <div className="security-badge">
-                            <strong>Enterprise Access</strong>
-                            <p>Authorized access only. Verified academic credentialing and encrypted progress tracking active.</p>
-                        </div>
+                    <div className="visual-bottom-footer">
+                        <p>© 2024 OGES Solutions Private Limited. All Rights Reserved.</p>
                     </div>
                 </div>
 
                 <div className="auth-form-panel">
-                    <div className="form-container-premium">
-                        <div className="auth-header-section">
-                            <h1>{isLogin ? 'Oges Staff Portal' : 'Member Onboarding'}</h1>
-                            <p className="auth-subtitle">{isLogin ? 'Authenticate to access your internal training and resources' : 'Join the Oges internal workforce development network'}</p>
+                    <div className="form-container-glass">
+                        <div className="auth-header-section" style={{textAlign: "center"}}>
+                            <h1 style={{fontSize: '1.8rem', fontWeight: '800', marginBottom: '0.2rem'}}>{isLogin ? 'Welcome Back' : 'Create an Account'}</h1>
+                            <p className="auth-subtitle" style={{marginBottom: '2rem', fontSize: '0.85rem'}}>{isLogin ? 'Sign in to access your secure workspace.' : 'Join the Oges learning network.'}</p>
                         </div>
 
                         {error && <div className="auth-alert alert-error">{error}</div>}
@@ -132,18 +138,21 @@ const Auth = ({ onAuthSuccess, initialIsLogin = true, isDarkMode, onToggleTheme 
                          {showForgotPassword ? (
                             <div className="forgot-password-flow">
                                 <h2>Portal Access Recovery</h2>
-                                <p className="onboarding-desc">Provide your registered Oges staff email to receive a secure recovery link.</p>
+                                <p className="onboarding-desc">Provide your registered email to receive a secure recovery link.</p>
                                 <form className="auth-main-form" onSubmit={handleForgotPassword}>
                                     <div className="input-field-group">
-                                        <label htmlFor="reset-email">Email Address</label>
-                                        <input 
-                                            id="reset-email" 
-                                            type="email" 
-                                            placeholder="name@example.com" 
-                                            value={email} 
-                                            onChange={(e) => setEmail(e.target.value)} 
-                                            required 
-                                        />
+                                        <label htmlFor="reset-email">EMAIL ADDRESS</label>
+                                        <div className="input-with-icon">
+                                            <FiMail className="input-icon" />
+                                            <input 
+                                                id="reset-email" 
+                                                type="email" 
+                                                placeholder="name@example.com" 
+                                                value={email} 
+                                                onChange={(e) => setEmail(e.target.value)} 
+                                                required 
+                                            />
+                                        </div>
                                     </div>
                                     <button type="submit" className="submit-auth-btn" disabled={loading}>
                                         {loading ? 'Processing...' : 'Send Recovery Link'}
@@ -179,29 +188,13 @@ const Auth = ({ onAuthSuccess, initialIsLogin = true, isDarkMode, onToggleTheme 
                         ) : !isLogin && onboardingStep === 'category' ? (
                             <div className="onboarding-category-selection">
                                 <h2>Skill Domain Specialization</h2>
-                                <p className="onboarding-desc">Specify your primary area of operations within Oges.</p>
+                                <p className="onboarding-desc">Specify your primary area of operations.</p>
                                 <div className="category-grid-chips">
                                     {[
                                         { id: 'Frontend Development', icon: '🎨' },
                                         { id: 'Backend Development', icon: '⚙️' },
-                                        { id: 'Full Stack Development', icon: '🌐' },
                                         { id: 'Data Science', icon: '📊' },
-                                        { id: 'Data Analytics', icon: '📈' },
-                                        { id: 'Artificial Intelligence', icon: '🤖' },
-                                        { id: 'Machine Learning', icon: '🧠' },
                                         { id: 'Cloud Computing', icon: '☁️' },
-                                        { id: 'DevOps', icon: '♾️' },
-                                        { id: 'Cyber Security', icon: '🔒' },
-                                        { id: 'Mobile App Development', icon: '📱' },
-                                        { id: 'UI/UX Design', icon: '🎨' },
-                                        { id: 'Database Management', icon: '🖥️' },
-                                        { id: 'Software Testing', icon: '🧪' },
-                                        { id: 'Game Development', icon: '🎮' },
-                                        { id: 'Blockchain Development', icon: '⛓️' },
-                                        { id: 'Internet of Things (IoT)', icon: '📡' },
-                                        { id: 'AR/VR Development', icon: '🥽' },
-                                        { id: 'Networking', icon: '🌐' },
-                                        { id: 'System Design', icon: '🏗️' },
                                     ].map(cat => (
                                         <div 
                                             key={cat.id} 
@@ -261,20 +254,24 @@ const Auth = ({ onAuthSuccess, initialIsLogin = true, isDarkMode, onToggleTheme 
                                 <form className="auth-main-form" onSubmit={handleSubmit}>
                                     {!isLogin && (
                                         <div className="input-field-group">
-                                            <label htmlFor="fullName">Full Name</label>
+                                            <label htmlFor="fullName">FULL NAME</label>
                                             <input id="fullName" type="text" placeholder="e.g. John Doe" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
                                         </div>
                                     )}
                                     <div className="input-field-group">
-                                        <label htmlFor="email">{isLogin ? 'OGES STAFF EMAIL' : 'Work Email Address'}</label>
-                                        <input id="email" type="email" placeholder="staff@oges.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                                        <label htmlFor="email">EMAIL ADDRESS</label>
+                                        <div className="input-with-icon">
+                                            <FiMail className="input-icon" />
+                                            <input id="email" type="email" placeholder="akshaya.singh@oges.co" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                                        </div>
                                     </div>
                                      <div className="input-field-group">
                                         <div className="label-row">
-                                            <label htmlFor="password">{isLogin ? 'PORTAL SECURITY PASSWORD' : 'Set Strong Password'}</label>
-                                            {isLogin && <button type="button" className="forgot-password-link-btn" onClick={() => setShowForgotPassword(true)}>Reset Key?</button>}
+                                            <label htmlFor="password">PASSWORD</label>
+                                            {isLogin && <button type="button" className="forgot-password-link-btn" onClick={() => setShowForgotPassword(true)}>Forgot?</button>}
                                         </div>
-                                        <div className="password-input-wrapper">
+                                        <div className="password-input-wrapper input-with-icon">
+                                            <FiLock className="input-icon" />
                                             <input 
                                                 id="password" 
                                                 type={showPassword ? "text" : "password"} 
@@ -299,7 +296,7 @@ const Auth = ({ onAuthSuccess, initialIsLogin = true, isDarkMode, onToggleTheme 
                                             <span className="loader-dots">
                                                 <span>.</span><span>.</span><span>.</span>
                                             </span>
-                                        ) : (isLogin ? 'Access Portal' : 'Join Oges')}
+                                        ) : (isLogin ? <><FiShield /> Secure Authentication</> : 'Join Oges')}
                                     </button>
                                 </form>
                             </>
@@ -308,17 +305,15 @@ const Auth = ({ onAuthSuccess, initialIsLogin = true, isDarkMode, onToggleTheme 
 
                         <footer className="form-toggle-footer">
                             <p>
-                                {isLogin ? "New to the Oges network?" : "Already part of Oges?"}
+                                {isLogin ? "Need an account?" : "Already have an account?"}
                                 <button className="switch-auth-link" onClick={toggleAuth}>
-                                    {isLogin ? 'Onboard here' : 'Log in here'}
+                                    {isLogin ? 'Register Now' : 'Sign In'}
                                 </button>
                             </p>
                         </footer>
                     </div>
                 </div>
             </main>
-
-            <Footer />
         </div>
     );
 };

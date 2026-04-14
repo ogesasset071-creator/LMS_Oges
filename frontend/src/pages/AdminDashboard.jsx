@@ -18,6 +18,8 @@ import {
   FiPlay,
   FiChevronRight,
   FiLock,
+  FiSun,
+  FiMoon,
 } from "react-icons/fi";
 import {
   BarChart,
@@ -75,6 +77,7 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
   const [isPostingAnnouncement, setIsPostingAnnouncement] = useState(false);
   const [submissions, setSubmissions] = useState([]);
   const [completions, setCompletions] = useState([]);
+  const [employees, setEmployees] = useState([]);
   const [adminStats, setAdminStats] = useState(null);
   const [isUploadingThumb, setIsUploadingThumb] = useState(false);
 
@@ -85,6 +88,10 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [showCropper, setShowCropper] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [selectedEmployeeDetails, setSelectedEmployeeDetails] = useState(null);
+  const [isEmployeeModalOpen, setIsEmployeeModalOpen] = useState(false);
+  const [isEditingEmployee, setIsEditingEmployee] = useState(false);
+  const [editEmployeeForm, setEditEmployeeForm] = useState({});
 
   const courseLevels = ["All", "Beginner", "Intermediate", "Advanced"];
 
@@ -239,7 +246,7 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
 
   const fetchAssignments = async () => {
     try {
-      const res = await api.get("/admin/assignments");
+      const res = await api.get("/user/admin/assignments");
       setMyAssignments(res.data);
     } catch (e) {
       console.error(e);
@@ -248,7 +255,7 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
 
   const fetchAdminStats = async () => {
     try {
-      const res = await api.get("/admin/dashboard/stats");
+      const res = await api.get("/user/admin/dashboard/stats");
       setAdminStats(res.data);
     } catch (e) {
       console.error(e);
@@ -263,7 +270,7 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
     )
       return;
     try {
-      await api.delete(`/admin/assignments/${id}`);
+      await api.delete(`/user/admin/assignments/${id}`);
       fetchAssignments();
     } catch (err) {
       console.error(err);
@@ -315,26 +322,26 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
   React.useEffect(() => {
     const fetchSubmissions = async () => {
       try {
-        const res = await api.get("/admin/submissions");
+        const res = await api.get("/user/admin/submissions");
         setSubmissions(res.data);
       } catch (e) {
         console.error("Submissions fail", e);
       }
     };
-    const fetchCompletions = async () => {
+    const fetchEmployees = async () => {
       try {
-        const res = await api.get("/admin/completions");
-        setCompletions(res.data);
+        const res = await api.get("/user/admin/employees");
+        setEmployees(res.data);
       } catch (e) {
-        console.error("Completions fail", e);
+        console.error("Employees fail", e);
       }
     };
 
     if (currentTab === "Submissions") {
       fetchSubmissions();
     }
-    if (currentTab === "Graduates") {
-      fetchCompletions();
+    if (currentTab === "Employees" || currentTab === "Graduates") {
+      fetchEmployees(); // Overrode graduates tab
     }
   }, [currentTab]);
 
@@ -672,10 +679,10 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
 
     try {
       if (assignmentData.id) {
-        await api.put(`/admin/assignments/${assignmentData.id}`, payload);
+        await api.put(`/user/admin/assignments/${assignmentData.id}`, payload);
         alert("Assignment Updated Successfully!");
       } else {
-        await api.post("/admin/assignments", payload);
+        await api.post("/user/admin/assignments", payload);
         alert("Assignment Uploaded Successfully!");
       }
       setIsUploading(false);
@@ -3569,6 +3576,7 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
           </div>
         );
 
+      case "Employees":
       case "Graduates":
         return (
           <div className="edu-content-scroll">
@@ -3588,7 +3596,7 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
                     color: "var(--text-main)",
                   }}
                 >
-                  Training Graduates
+                  Manage Employees
                 </h2>
                 <div
                   style={{
@@ -3602,8 +3610,8 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
                     fontWeight: "800",
                   }}
                 >
-                  <span style={{ fontSize: "1.2rem" }}>📜</span>{" "}
-                  {completions.length} Certificates Issued
+                  <span style={{ fontSize: "1.2rem" }}>👥</span>{" "}
+                  {employees.length} Total Employees
                 </div>
               </div>
 
@@ -3639,7 +3647,7 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
                           letterSpacing: "1px",
                         }}
                       >
-                        LEARNER DETAILS
+                        EMPLOYEE DETAILS
                       </th>
                       <th
                         style={{
@@ -3650,7 +3658,7 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
                           letterSpacing: "1px",
                         }}
                       >
-                        MODULE TITLE
+                        ROLE / DOMAIN
                       </th>
                       <th
                         style={{
@@ -3661,7 +3669,7 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
                           letterSpacing: "1px",
                         }}
                       >
-                        CERTIFICATION ID
+                        XP & LEVEL
                       </th>
                       <th
                         style={{
@@ -3672,7 +3680,7 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
                           letterSpacing: "1px",
                         }}
                       >
-                        COMPLETION DATE
+                        REPUTATION (PP)
                       </th>
                       <th
                         style={{
@@ -3683,17 +3691,27 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
                           letterSpacing: "1px",
                         }}
                       >
-                        STATUS
+                        JOINED
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {completions.map((c, idx) => (
+                    {employees.map((c, idx) => (
                       <tr
                         key={idx}
+                        onClick={async () => {
+                          try {
+                            const res = await api.get(`/user/admin/employees/${c.id}`);
+                            setSelectedEmployeeDetails(res.data);
+                            setIsEmployeeModalOpen(true);
+                          } catch (err) {
+                            console.error("Failed to load employee details", err);
+                          }
+                        }}
                         style={{
                           borderBottom: "1px solid var(--border-color)",
                           transition: "background 0.2s",
+                          cursor: "pointer",
                         }}
                         onMouseOver={(e) =>
                         (e.currentTarget.style.background =
@@ -3717,7 +3735,7 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
                                 height: "40px",
                                 borderRadius: "50%",
                                 background:
-                                  "linear-gradient(135deg, #fb923c, #f97316)",
+                                  "linear-gradient(135deg, #3b82f6, #2563eb)",
                                 color: "white",
                                 display: "flex",
                                 alignItems: "center",
@@ -3726,7 +3744,7 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
                                 fontSize: "0.9rem",
                               }}
                             >
-                              {c.learner_name ? c.learner_name.charAt(0) : "S"}
+                              {c.full_name ? c.full_name.charAt(0) : "S"}
                             </div>
                             <div>
                               <div
@@ -3736,7 +3754,7 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
                                   fontSize: "0.95rem",
                                 }}
                               >
-                                {c.learner_name}
+                                {c.full_name}
                               </div>
                               <div
                                 style={{
@@ -3744,7 +3762,7 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
                                   color: "var(--text-sub)",
                                 }}
                               >
-                                {c.learner_email}
+                                {c.email}
                               </div>
                             </div>
                           </div>
@@ -3755,56 +3773,59 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
                               fontWeight: "700",
                               fontSize: "0.9rem",
                               color: "var(--text-main)",
+                              textTransform: "capitalize"
                             }}
                           >
-                            {c.course_title}
+                            {c.role}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: "0.8rem",
+                              color: "var(--text-sub)",
+                            }}
+                          >
+                            {c.category}
                           </div>
                         </td>
                         <td
                           style={{
                             padding: "1.2rem",
-                            color: "var(--text-sub)",
-                            fontSize: "0.85rem",
-                            fontWeight: "600",
                           }}
                         >
-                          OGS-
-                          {c.learner_name
-                            ? c.learner_name.substring(0, 2).toUpperCase()
-                            : "ST"}
-                          -{idx + 300}
+                           <div style={{ color: "#3b82f6", fontWeight: "800", fontSize: "0.95rem" }}>
+                             {c.xp} XP
+                           </div>
+                           <div style={{ fontSize: "0.8rem", color: "var(--text-sub)" }}>
+                             Level {c.level}
+                           </div>
                         </td>
                         <td
                           style={{
                             padding: "1.2rem",
-                            color: "var(--text-sub)",
-                            fontSize: "0.9rem",
                           }}
                         >
-                          {new Date(c.timestamp).toLocaleDateString(undefined, {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })}
-                        </td>
-                        <td style={{ padding: "1.2rem" }}>
                           <span
                             style={{
-                              background: "rgba(34, 197, 94, 0.1)",
-                              color: "#22c55e",
+                              background: "rgba(234, 179, 8, 0.1)",
+                              color: "#eab308",
                               padding: "4px 12px",
                               borderRadius: "100px",
                               fontSize: "0.7rem",
                               fontWeight: "900",
-                              border: "1px solid rgba(34, 197, 94, 0.2)",
+                              border: "1px solid rgba(234, 179, 8, 0.2)",
                             }}
                           >
-                            VERIFIED
+                            {c.pp} Point(s)
+                          </span>
+                        </td>
+                        <td style={{ padding: "1.2rem" }}>
+                          <span style={{ color: "var(--text-sub)", fontSize: "0.85rem" }}>
+                            {c.joined ? new Date(c.joined).toLocaleDateString() : "N/A"}
                           </span>
                         </td>
                       </tr>
                     ))}
-                    {completions.length === 0 && (
+                    {employees.length === 0 && (
                       <tr>
                         <td
                           colSpan="5"
@@ -3817,7 +3838,7 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
                               opacity: 0.3,
                             }}
                           >
-                            🎓
+                            👥
                           </div>
                           <h3
                             style={{
@@ -3825,7 +3846,7 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
                               fontWeight: "800",
                             }}
                           >
-                            No Graduates Yet
+                            No Employees Found
                           </h3>
                           <p
                             style={{
@@ -3833,8 +3854,7 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
                               fontSize: "0.95rem",
                             }}
                           >
-                            Once learners complete 100% of your modules, they'll
-                            appear here.
+                            Learners that register will appear here.
                           </p>
                         </td>
                       </tr>
@@ -3863,7 +3883,7 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
             "All Trainings",
             "My Assignments",
             "Submissions",
-            "Graduates",
+            "Employees",
             "Upload Training",
             "Upload Assignment",
             "Upload Quiz",
@@ -3887,18 +3907,7 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
             gap: "10px",
           }}
         >
-          <button
-            className="sidebar-logout"
-            onClick={onToggleTheme}
-            style={{
-              marginTop: "0",
-              background: "rgba(255,255,255,0.05)",
-              color: "var(--text-main)",
-              border: "1px solid var(--border-color)",
-            }}
-          >
-            {isDarkMode ? "🌙 Dark Mode" : "☀️ Light Mode"}
-          </button>
+
           <button
             className="sidebar-logout"
             onClick={onLogout}
@@ -3938,6 +3947,9 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
                   </button>
                 </>
               )}
+            <button className="header-icon-btn theme-toggle-btn" onClick={onToggleTheme} title="Toggle Theme" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border-color)", color: "var(--text-main)" }}>
+              {isDarkMode ? <FiSun /> : <FiMoon />}
+            </button>
           </div>
         </header>
 
@@ -4457,6 +4469,216 @@ const AdminDashboard = ({ onLogout, isDarkMode, onToggleTheme }) => {
           </div>
         </div>
       )}
+      {/* Employee Detail Modal */}
+      {isEmployeeModalOpen && selectedEmployeeDetails && (
+        <div
+          className="modal-overlay"
+          onClick={() => setIsEmployeeModalOpen(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.85)",
+            backdropFilter: "blur(8px)",
+            zIndex: 10000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "2rem",
+          }}
+        >
+          <div
+            className="modal-card-premium"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "var(--card-bg)",
+              width: "100%",
+              maxWidth: "800px",
+              borderRadius: "24px",
+              border: "1px solid var(--border-color)",
+              overflow: "hidden",
+              animation: "scaleUp 0.3s ease",
+            }}
+          >
+            <div style={{ position: "relative", background: "linear-gradient(135deg, var(--card-bg), #0f172a)", padding: "3rem", borderBottom: "1px solid var(--border-color)" }}>
+              <button
+                onClick={() => setIsEmployeeModalOpen(false)}
+                style={{
+                  position: "absolute",
+                  top: "1.5rem",
+                  right: "1.5rem",
+                  background: "rgba(255,255,255,0.1)",
+                  color: "var(--text-main)",
+                  border: "none",
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "50%",
+                  cursor: "pointer",
+                  fontSize: "1.2rem",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "background 0.2s"
+                }}
+              >✕</button>
+              
+              <div style={{ display: "flex", gap: "2rem", alignItems: "center" }}>
+                <div style={{
+                  width: "100px",
+                  height: "100px",
+                  borderRadius: "50%",
+                  background: "linear-gradient(135deg, #3b82f6, #2563eb)",
+                  color: "white",
+                  fontSize: "2.5rem",
+                  fontWeight: "900",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}>{selectedEmployeeDetails.profile.full_name?.charAt(0)}</div>
+                
+                <div>
+                  <h2 style={{ fontSize: "2rem", fontWeight: "800", color: "var(--text-main)", marginBottom: "0.5rem" }}>
+                    {selectedEmployeeDetails.profile.full_name}
+                  </h2>
+                  <div style={{ color: "var(--text-sub)", fontSize: "1rem", marginBottom: "0.5rem" }}>
+                    {selectedEmployeeDetails.profile.email} • {selectedEmployeeDetails.profile.category} • Role: <span style={{color: "var(--primary-blue)", fontWeight: "bold"}}>{selectedEmployeeDetails.profile.role}</span>
+                  </div>
+                  <div style={{ display: "flex", gap: "1rem", marginTop: "1rem", flexWrap: "wrap" }}>
+                    <span style={{ background: "rgba(59, 130, 246, 0.1)", color: "#3b82f6", padding: "0.4rem 1rem", borderRadius: "100px", fontWeight: "800", fontSize: "0.85rem" }}>
+                      Level {selectedEmployeeDetails.profile.level} ({selectedEmployeeDetails.profile.xp} XP)
+                    </span>
+                    <span style={{ background: "rgba(234, 179, 8, 0.1)", color: "#eab308", padding: "0.4rem 1rem", borderRadius: "100px", fontWeight: "800", fontSize: "0.85rem" }}>
+                      {selectedEmployeeDetails.profile.pp} PP
+                    </span>
+                    
+                    {selectedEmployeeDetails.profile.badges && selectedEmployeeDetails.profile.badges.split(',').filter(Boolean).map((badge, idx) => (
+                        <span key={idx} style={{ background: "rgba(16, 185, 129, 0.1)", color: "#10b981", padding: "0.4rem 1rem", borderRadius: "100px", fontWeight: "800", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                            <i className="fa-solid fa-award"></i> {badge.trim()}
+                        </span>
+                    ))}
+                  </div>
+                  
+                  <button 
+                    onClick={() => {
+                        setEditEmployeeForm({
+                            Lms_full_name: selectedEmployeeDetails.profile.full_name,
+                            Lms_email: selectedEmployeeDetails.profile.email,
+                            Lms_role: selectedEmployeeDetails.profile.role,
+                            Lms_category: selectedEmployeeDetails.profile.category,
+                            Lms_xp: selectedEmployeeDetails.profile.xp,
+                            Lms_pp: selectedEmployeeDetails.profile.pp,
+                            Lms_badges: selectedEmployeeDetails.profile.badges || "",
+                        });
+                        setIsEditingEmployee(true);
+                    }}
+                    style={{ marginTop: "1rem", background: "transparent", color: "var(--primary-blue)", border: "1px solid var(--primary-blue)", padding: "0.4rem 1rem", borderRadius: "8px", fontWeight: "700", cursor: "pointer" }}
+                  >
+                    Edit Profile
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-body-scroll" style={{ padding: "2.5rem", maxHeight: "60vh", overflowY: "auto" }}>
+              {isEditingEmployee ? (
+                <div style={{ background: "rgba(255,255,255,0.02)", padding: "2rem", borderRadius: "16px", border: "1px solid var(--border-color)" }}>
+                    <h3 style={{ color: "var(--text-main)", marginBottom: "1.5rem", fontSize: "1.2rem", fontWeight: "800" }}>Edit Employee Details</h3>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
+                        <div>
+                            <label style={{ display: "block", color: "var(--text-sub)", marginBottom: "0.5rem", fontSize: "0.85rem", fontWeight: "700" }}>Full Name</label>
+                            <input type="text" value={editEmployeeForm.Lms_full_name} onChange={(e) => setEditEmployeeForm({...editEmployeeForm, Lms_full_name: e.target.value})} className="auth-input-premium" style={{ width: "100%", padding: "0.8rem", borderRadius: "8px", background: "var(--bg-main)", color: "var(--text-main)", border: "1px solid var(--border-color)" }} />
+                        </div>
+                        <div>
+                            <label style={{ display: "block", color: "var(--text-sub)", marginBottom: "0.5rem", fontSize: "0.85rem", fontWeight: "700" }}>Email</label>
+                            <input type="email" value={editEmployeeForm.Lms_email} onChange={(e) => setEditEmployeeForm({...editEmployeeForm, Lms_email: e.target.value})} className="auth-input-premium" style={{ width: "100%", padding: "0.8rem", borderRadius: "8px", background: "var(--bg-main)", color: "var(--text-main)", border: "1px solid var(--border-color)" }} />
+                        </div>
+                        <div>
+                            <label style={{ display: "block", color: "var(--text-sub)", marginBottom: "0.5rem", fontSize: "0.85rem", fontWeight: "700" }}>System Role</label>
+                            <select value={editEmployeeForm.Lms_role} onChange={(e) => setEditEmployeeForm({...editEmployeeForm, Lms_role: e.target.value})} className="auth-input-premium" style={{ width: "100%", padding: "0.8rem", borderRadius: "8px", background: "var(--bg-main)", color: "var(--text-main)", border: "1px solid var(--border-color)" }}>
+                                <option value="learner">Learner</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style={{ display: "block", color: "var(--text-sub)", marginBottom: "0.5rem", fontSize: "0.85rem", fontWeight: "700" }}>Domain / Category</label>
+                            <input type="text" value={editEmployeeForm.Lms_category} onChange={(e) => setEditEmployeeForm({...editEmployeeForm, Lms_category: e.target.value})} className="auth-input-premium" style={{ width: "100%", padding: "0.8rem", borderRadius: "8px", background: "var(--bg-main)", color: "var(--text-main)", border: "1px solid var(--border-color)" }} />
+                        </div>
+                        <div>
+                            <label style={{ display: "block", color: "var(--text-sub)", marginBottom: "0.5rem", fontSize: "0.85rem", fontWeight: "700" }}>Base XP</label>
+                            <input type="number" value={editEmployeeForm.Lms_xp} onChange={(e) => setEditEmployeeForm({...editEmployeeForm, Lms_xp: parseInt(e.target.value) || 0})} className="auth-input-premium" style={{ width: "100%", padding: "0.8rem", borderRadius: "8px", background: "var(--bg-main)", color: "var(--text-main)", border: "1px solid var(--border-color)" }} />
+                        </div>
+                        <div>
+                            <label style={{ display: "block", color: "var(--text-sub)", marginBottom: "0.5rem", fontSize: "0.85rem", fontWeight: "700" }}>Reputation (PP)</label>
+                            <input type="number" value={editEmployeeForm.Lms_pp} onChange={(e) => setEditEmployeeForm({...editEmployeeForm, Lms_pp: parseInt(e.target.value) || 0})} className="auth-input-premium" style={{ width: "100%", padding: "0.8rem", borderRadius: "8px", background: "var(--bg-main)", color: "var(--text-main)", border: "1px solid var(--border-color)" }} />
+                        </div>
+                        <div>
+                            <label style={{ display: "block", color: "var(--text-sub)", marginBottom: "0.5rem", fontSize: "0.85rem", fontWeight: "700" }}>Achievements (comma-separated)</label>
+                            <input type="text" value={editEmployeeForm.Lms_badges} onChange={(e) => setEditEmployeeForm({...editEmployeeForm, Lms_badges: e.target.value})} placeholder="e.g. Frontend Rookie 🥉, Top Scorer 🏆" className="auth-input-premium" style={{ width: "100%", padding: "0.8rem", borderRadius: "8px", background: "var(--bg-main)", color: "var(--text-main)", border: "1px solid var(--border-color)" }} />
+                        </div>
+                    </div>
+                    <div style={{ display: "flex", gap: "1rem", justifyContent: "flex-end" }}>
+                        <button onClick={() => setIsEditingEmployee(false)} style={{ background: "transparent", color: "var(--text-sub)", border: "none", padding: "0.8rem 1.5rem", borderRadius: "8px", fontWeight: "700", cursor: "pointer" }}>Cancel</button>
+                        <button 
+                            onClick={async () => {
+                                try {
+                                    await api.put(`/user/admin/employees/${selectedEmployeeDetails.profile.id}`, editEmployeeForm);
+                                    const res = await api.get(`/user/admin/employees/${selectedEmployeeDetails.profile.id}`);
+                                    setSelectedEmployeeDetails(res.data);
+                                    setIsEditingEmployee(false);
+                                    
+                                    // Refresh background employees list
+                                    const allRes = await api.get("/user/admin/employees");
+                                    setEmployees(allRes.data);
+                                } catch (e) {
+                                    console.error("Save failed", e);
+                                    alert("Failed to save changes.");
+                                }
+                            }} 
+                            className="publish-btn" style={{ padding: "0.8rem 2rem", background: "var(--primary-blue)" }}
+                        >
+                            Save Changes
+                        </button>
+                    </div>
+                </div>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem" }}>
+                  <div>
+                    <h3 style={{ color: "var(--primary-blue)", marginBottom: "1rem", fontSize: "1.2rem", fontWeight: "800" }}>Learning Progress</h3>
+                    {selectedEmployeeDetails.progress && selectedEmployeeDetails.progress.length > 0 ? (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}>
+                        {selectedEmployeeDetails.progress.map((p, i) => (
+                          <div key={i} style={{ background: "rgba(255,255,255,0.03)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
+                            <p style={{ color: "var(--text-main)", fontWeight: "700", marginBottom: "0.2rem" }}>{p.course_title}</p>
+                            <p style={{ color: "var(--text-sub)", fontSize: "0.85rem" }}>{p.chapter_title} • {p.completed ? <span style={{color: "#10b981"}}>Completed</span> : "In Progress"}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p style={{ color: "var(--text-sub)", fontStyle: "italic" }}>No learning progress yet.</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <h3 style={{ color: "var(--primary-blue)", marginBottom: "1rem", fontSize: "1.2rem", fontWeight: "800" }}>Assessments & Submissions</h3>
+                    {selectedEmployeeDetails.submissions && selectedEmployeeDetails.submissions.length > 0 ? (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}>
+                        {selectedEmployeeDetails.submissions.map((sub, i) => (
+                          <div key={i} style={{ background: "rgba(255,255,255,0.03)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
+                            <p style={{ color: "var(--text-main)", fontWeight: "700", marginBottom: "0.2rem" }}>{sub.title}</p>
+                            <p style={{ color: "var(--text-sub)", fontSize: "0.85rem", textTransform: "capitalize" }}>{sub.type} • Status: <span style={{color: "#10b981"}}>{sub.status}</span></p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p style={{ color: "var(--text-sub)", fontStyle: "italic" }}>No prior assessment submissions.</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

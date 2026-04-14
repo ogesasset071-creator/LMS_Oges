@@ -19,22 +19,11 @@ from passlib.context import CryptContext
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def hash_password(password: str) -> str:
-    """Hashes a password using bcrypt."""
-    return pwd_context.hash(password)
+    """Returns password as-is (plaintext) as requested."""
+    return password
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verifies that the plain password matches the hashed password. Handles legacy plaintext correctly."""
-    if not hashed_password:
-        return False
-        
-    # If the hash starts with bcrypt signature, verify normally
-    if hashed_password.startswith("$2"):
-        try:
-            return pwd_context.verify(plain_password, hashed_password)
-        except Exception:
-            return False
-            
-    # Fallback to direct comparison for old plaintext passwords (or SHA-256)
+    """Performs a simple string comparison for plaintext passwords."""
     return plain_password == hashed_password
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")

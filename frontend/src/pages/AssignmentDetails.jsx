@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import {
@@ -15,6 +15,7 @@ import {
   FiDownload,
   FiArrowRight
 } from "react-icons/fi";
+import Swal from "sweetalert2";
 import "./AssignmentDetails.css";
 
 const AssignmentDetails = ({ handleUpdateUser }) => {
@@ -26,10 +27,16 @@ const AssignmentDetails = ({ handleUpdateUser }) => {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Proctoring States
+  const [warningsCount, setWarningsCount] = useState(0);
+  const [isRestricted, setIsRestricted] = useState(false);
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+
   useEffect(() => {
     const fetchDetail = async () => {
       try {
-        const res = await api.get(`/assignments/${id}`);
+        const res = await api.get(`/user/assignments/${id}`);
         setAssignment(res.data);
       } catch (e) {
         console.error("Error fetching assignment", e);
@@ -40,10 +47,96 @@ const AssignmentDetails = ({ handleUpdateUser }) => {
     fetchDetail();
   }, [id]);
 
+  // Proctoring Effects
+  useEffect(() => {
+    if (!loading && !result && assignment) {
+      if(document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen().catch(()=>{});
+      }
+      setIsRestricted(true);
+      
+      const startCamera = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            streamRef.current = stream;
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+            }
+        } catch (err) {
+            Swal.fire({
+                icon: "error",
+                title: "Camera Required",
+                text: "Please allow camera access.",
+                background: "var(--card-bg)"
+            });
+        }
+      };
+      startCamera();
+    }
+  }, [loading, result, assignment]);
+
+  useEffect(() => {
+    if (!isRestricted) return;
+
+    const handleViolation = (reason) => {
+        setWarningsCount(prev => {
+            const newCount = prev + 1;
+            Swal.fire({
+                icon: "warning",
+                title: "Violation Detected!",
+                text: `${reason}. This is warning ${newCount}/3.`,
+                confirmButtonColor: "#ef4444",
+                background: "var(--card-bg)"
+            }).then(() => {
+                if (newCount >= 3 && !submitting) {
+                    Swal.fire({ title: "Locked", text: "Submitting assignment...", icon: "error" });
+                    handleSubmit();
+                }
+            });
+            return newCount;
+        });
+    };
+
+    const handleVisibilityChange = () => {
+        if (document.visibilityState === 'hidden') handleViolation("You left the assessment page");
+    };
+
+    const handleBlur = () => {
+        handleViolation("Window focus lost");
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === "PrintScreen" || (e.metaKey && e.shiftKey && (e.key === "s" || e.key === "S"))) {
+            e.preventDefault();
+            navigator.clipboard.writeText("Screenshots are disabled for this assignment.");
+            handleViolation("Screenshot shortcut detected");
+        }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("blur", handleBlur);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+        window.removeEventListener("blur", handleBlur);
+        document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isRestricted, submitting]);
+
+  const cleanupProctoring = () => {
+      setIsRestricted(false);
+      if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+      if (streamRef.current) {
+          streamRef.current.getTracks().forEach(t => t.stop());
+          streamRef.current = null;
+      }
+  };
+
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      const res = await api.post(`/assignments/${id}/complete`);
+      const res = await api.post(`/user/assignments/${id}/complete`);
       if (res.data.status === "success" || res.data.status === "already_done") {
         setResult({
           status: "success",
@@ -59,6 +152,7 @@ const AssignmentDetails = ({ handleUpdateUser }) => {
           const userRes = await api.get("/user/me");
           if (handleUpdateUser) handleUpdateUser(userRes.data);
         }
+        cleanupProctoring();
       }
     } catch (e) {
       console.error(e);
@@ -118,11 +212,30 @@ const AssignmentDetails = ({ handleUpdateUser }) => {
 
   return (
     <div className="assignment-details-page">
+      {isRestricted && (
+        <div style={{ position: 'fixed', top: '80px', right: '20px', width: '150px', height: '110px', borderRadius: '8px', overflow: 'hidden', border: '3px solid #ef4444', boxShadow: '0 10px 25px rgba(0,0,0,0.5)', zIndex: 9999 }}>
+            <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(239,68,68,0.9)', color: 'white', fontSize: '0.65rem', textAlign: 'center', fontWeight: 'bold', padding: '3px 0' }}>PROCTORED</div>
+        </div>
+      )}
       <div className="assignment-content-wrapper">
         <header className="assignment-header">
           <button
             className="back-btn-premium"
-            onClick={() => navigate(-1)}
+            onClick={() => {
+              if(isRestricted) {
+                Swal.fire({
+                    title: "Leave Assessment?",
+                    text: "Your progress may be lost.",
+                    icon: "warning",
+                    showCancelButton: true
+                }).then((r) => { 
+                    if(r.isConfirmed) { cleanupProctoring(); navigate(-1); }
+                });
+              } else {
+                navigate(-1);
+              }
+            }}
           >
             <FiArrowLeft /> Back
           </button>

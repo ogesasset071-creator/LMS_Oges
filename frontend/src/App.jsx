@@ -16,6 +16,7 @@ import Categories from "./pages/Categories";
 import Admins from "./pages/Admins";
 import Profile from "./pages/Profile";
 import AdminDashboard from "./pages/AdminDashboard";
+
 import Dashboard from "./pages/Dashboard";
 import Assignments from "./pages/Assignments";
 
@@ -76,8 +77,7 @@ function AppContent() {
   const [isShowingIdlePopup, setIsShowingIdlePopup] = useState(false);
 
   useEffect(() => {
-    if (!isLoggedIn || user?.Lms_role !== "learner")
-      return;
+    if (!isLoggedIn || user?.Lms_role !== "learner") return;
 
     const handleActivity = () => {
       setLastActivity(Date.now());
@@ -104,11 +104,7 @@ function AppContent() {
   }, [navigate]);
 
   useEffect(() => {
-    if (
-      !isLoggedIn ||
-      user?.Lms_role !== "learner" ||
-      isGlobalVideoPlaying
-    )
+    if (!isLoggedIn || user?.Lms_role !== "learner" || isGlobalVideoPlaying)
       return;
 
     const intervalId = setInterval(() => {
@@ -173,9 +169,8 @@ function AppContent() {
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
     localStorage.setItem("token", userData.access_token);
-    if (userData.Lms_role === "admin")
-      navigate("/admin");
-    else navigate("/");
+    if (userData.Lms_role === "admin") navigate("/admin");
+    else navigate("/dashboard");
   };
 
   const commonNavProps = {
@@ -195,12 +190,14 @@ function AppContent() {
     onToggleTheme: toggleTheme,
     sessionTime,
     setIsGlobalVideoPlaying,
+    onUserUpdate: handleUpdateUser,
   };
 
   return (
     <>
       {!location.pathname.startsWith("/admin/") &&
         location.pathname !== "/admin" &&
+        location.pathname !== "/dashboard" &&
         !location.pathname.startsWith("/super-admin") &&
         (isLoggedIn ||
           (location.pathname !== "/" &&
@@ -213,7 +210,11 @@ function AppContent() {
           path="/"
           element={
             isLoggedIn ? (
-              <Home {...commonNavProps} onLogout={logout} />
+              user?.Lms_role === "admin" ? (
+                <Navigate to="/admin" />
+              ) : (
+                <Navigate to="/dashboard" />
+              )
             ) : (
               <Auth
                 onAuthSuccess={handleAuthSuccess}
@@ -282,6 +283,15 @@ function AppContent() {
         />
         <Route
           path="/assignment/:id"
+          element={
+            <AssignmentDetails
+              {...commonNavProps}
+              onUserUpdate={handleUpdateUser}
+            />
+          }
+        />
+        <Route
+          path="/quiz/:id"
           element={
             <AssignmentDetails
               {...commonNavProps}

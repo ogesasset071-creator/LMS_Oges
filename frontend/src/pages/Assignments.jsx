@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./Assignments.css";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import api from "../services/api";
-import { FiPlus, FiCheckCircle, FiAward, FiClock, FiTarget, FiBriefcase, FiCode, FiList } from "react-icons/fi";
+import { FiPlus, FiCheckCircle, FiAward, FiClock, FiTarget, FiBriefcase, FiCode, FiList, FiAlertTriangle } from "react-icons/fi";
+import Swal from "sweetalert2";
 
 const Assignments = (props) => {
     const { user } = props;
@@ -25,6 +26,12 @@ const Assignments = (props) => {
     const [shortAnswerValues, setShortAnswerValues] = useState({});
     const [assignmentDetail, setAssignmentDetail] = useState(null);
     const [codeValue, setCodeValue] = useState("");
+    
+    // Restrict Mode / Proctoring
+    const [isRestrictedMode, setIsRestrictedMode] = useState(false);
+    const [warningsCount, setWarningsCount] = useState(0);
+    const videoRef = useRef(null);
+    const streamRef = useRef(null);
 
     useEffect(() => {
         fetchAssignments();
@@ -33,12 +40,106 @@ const Assignments = (props) => {
     const fetchAssignments = async () => {
         try {
             setLoading(true);
-            const res = await api.get("/assignments");
+            const res = await api.get("/user/assignments");
             setAssignments(res.data);
         } catch (e) {
             console.error(e);
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Start Camera
+    const startCamera = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            streamRef.current = stream;
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+            }
+        } catch (err) {
+            console.error("Camera access denied or failed", err);
+            Swal.fire({
+                icon: "error",
+                title: "Camera Access Required",
+                text: "You must allow camera access to take this assignment. Please refresh and allow.",
+                backdrop: `var(--card-bg)`
+            });
+        }
+    };
+
+    // Stop Camera
+    const stopCamera = () => {
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(t => t.stop());
+            streamRef.current = null;
+        }
+    };
+
+    // Restrict Mode Effect
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (isRestrictedMode && document.visibilityState === 'hidden') {
+                handleViolation();
+            }
+        };
+
+        const handleBlur = () => {
+            if (isRestrictedMode) {
+                handleViolation();
+            }
+        };
+
+        if (isRestrictedMode) {
+            startCamera();
+            document.addEventListener("visibilitychange", handleVisibilityChange);
+            window.addEventListener("blur", handleBlur);
+        } else {
+            stopCamera();
+        }
+
+        return () => {
+            stopCamera();
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            window.removeEventListener("blur", handleBlur);
+        };
+    }, [isRestrictedMode]);
+
+    const handleViolation = () => {
+        setWarningsCount(prev => {
+            const newCount = prev + 1;
+            Swal.fire({
+                icon: "warning",
+                title: "Violation Detected!",
+                text: `You have left the assignment page. This is warning ${newCount}/3. If you reach 3 warnings, your assignment will be auto-submitted and locked.`,
+                confirmButtonColor: "#ef4444",
+                background: "var(--card-bg)",
+                color: "var(--text-main)",
+                allowOutsideClick: false
+            }).then(() => {
+                if (newCount >= 3) {
+                    forceSubmitAssignment();
+                }
+            });
+            return newCount;
+        });
+    };
+
+    const forceSubmitAssignment = () => {
+        if (activeTask && !submitting) {
+            Swal.fire({
+                title: "Assignment Locked",
+                text: "Maximum warnings reached. Force submitting your assignment now.",
+                icon: "error",
+                background: "var(--card-bg)",
+                color: "var(--text-main)"
+            });
+            setSubmitting(true);
+            handleComplete(activeTask.id).then(() => {
+                setSubmitting(false);
+                setIsRestrictedMode(false);
+                setCurrentStep(3); // Go to success view or end view
+            });
         }
     };
 
@@ -48,7 +149,7 @@ const Assignments = (props) => {
         try {
             // New endpoint needed on backend or I can just use existing seeding logic logic extension
             // For now, I'll assume we add a POST /api/assignments
-            await api.post("/assignments", {
+            await api.post("/user/admin/assignments", {
                 title: newTitle,
                 description: newDesc,
                 reward_badge: newReward,
@@ -69,7 +170,7 @@ const Assignments = (props) => {
 
     const handleComplete = async (id) => {
         try {
-            await api.post(`/assignments/${id}/complete`);
+            await api.post(`/user/assignments/${id}/complete`);
             fetchAssignments();
         } catch (e) { console.error(e); }
     };
@@ -127,7 +228,7 @@ const Assignments = (props) => {
                                         ) : (
                                             <button className="btn-action-assign" onClick={async () => {
                                                 try {
-                                                    const res = await api.get(`/assignments/${a.id}`);
+                                                    const res = await api.get(`/user/assignments/${a.id}`);
                                                     setAssignmentDetail(res.data);
                                                     setActiveTask(a);
                                                     setCurrentStep(0);
@@ -153,8 +254,18 @@ const Assignments = (props) => {
             </main>
 
             {activeTask && (
-                <div className="modal-overlay-premium" onClick={() => { setActiveTask(null); setCurrentStep(0); }}>
+                <div className="modal-overlay-premium" onClick={() => { 
+                    if (isRestrictedMode) return; 
+                    setActiveTask(null); setCurrentStep(0); 
+                }}>
                     <div className="task-session-modal bigger" onClick={e => e.stopPropagation()}>
+                        
+                        {isRestrictedMode && (
+                            <div className="proctoring-cam-container" style={{ position: 'absolute', top: '15px', right: '15px', width: '120px', height: '90px', borderRadius: '8px', overflow: 'hidden', border: '2px solid #ef4444', boxShadow: '0 5px 15px rgba(0,0,0,0.3)', zIndex: 100 }}>
+                                <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                <div style={{ position: 'absolute', bottom: '2px', left: '0', width: '100%', textAlign: 'center', fontSize: '0.55rem', background: 'rgba(239, 68, 68, 0.9)', color: 'white', fontWeight: 'bold', padding: '2px 0' }}>PROCTORED</div>
+                            </div>
+                        )}
                         {currentStep === 0 && (
                             <div className="session-start-view text-center">
                                 <div className="session-icon-hero"><FiTarget size={60} /></div>
@@ -165,7 +276,14 @@ const Assignments = (props) => {
                                     <span>💎 {activeTask.reward_badge} Reward</span>
                                     <span>🛠️ MCQ + Coding Round</span>
                                 </div>
-                                <button className="btn-launch-challenge" onClick={() => setCurrentStep(1)}>I'm Ready, Let's Go!</button>
+                                <button className="btn-launch-challenge" onClick={() => { 
+                                    setCurrentStep(1); 
+                                    setIsRestrictedMode(true); 
+                                    setWarningsCount(0); 
+                                    if(document.documentElement.requestFullscreen) {
+                                        document.documentElement.requestFullscreen().catch(()=>{});
+                                    }
+                                }}>I'm Ready, Let's Go!</button>
                                 <button className="btn-cancel-p" onClick={() => setActiveTask(null)}>Maybe Later</button>
                             </div>
                         )}
@@ -227,7 +345,25 @@ const Assignments = (props) => {
                                     )}
                                 </div>
                                 <div className="session-footer-actions">
-                                    <button className="btn-cancel-p" onClick={() => { setActiveTask(null); setCurrentStep(0); }}>Back</button>
+                                    <button className="btn-cancel-p" onClick={() => { 
+                                        if (isRestrictedMode) {
+                                            Swal.fire({
+                                                title: "Exit Assignment?",
+                                                text: "Are you sure you want to exit? Your progress will be lost and this will be recorded.",
+                                                icon: "warning",
+                                                showCancelButton: true,
+                                                background: "var(--card-bg)"
+                                            }).then(res => {
+                                                if (res.isConfirmed) {
+                                                    setIsRestrictedMode(false);
+                                                    if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+                                                    setActiveTask(null); setCurrentStep(0);
+                                                }
+                                            });
+                                        } else {
+                                            setActiveTask(null); setCurrentStep(0); 
+                                        }
+                                    }}>Exit</button>
                                     <button className="btn-submit-p" onClick={() => {
                                         if (activeTask.title.toLowerCase().includes('coding')) {
                                             setCurrentStep(2);
@@ -235,6 +371,8 @@ const Assignments = (props) => {
                                             setSubmitting(true);
                                             handleComplete(activeTask.id).then(() => {
                                                 setSubmitting(false);
+                                                setIsRestrictedMode(false);
+                                                if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
                                                 setCurrentStep(3);
                                             });
                                         }
@@ -266,6 +404,8 @@ const Assignments = (props) => {
                                         setSubmitting(true);
                                         await handleComplete(activeTask.id);
                                         setSubmitting(false);
+                                        setIsRestrictedMode(false);
+                                        if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
                                         setCurrentStep(3);
                                     }}>{submitting ? 'Validating Output...' : 'Final Submission'}</button>
                                 </div>

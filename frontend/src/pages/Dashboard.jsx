@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import "./adminDashboard.css"; // Reuse the clean sidebar layout
+import "./Dashboard.css"; // Modern Learner Dashboard Styling
 import Navbar from "../components/Navbar";
 import api from "../services/api";
+import logo from "../assets/OgesLogo.png";
 import {
   AreaChart,
   Area,
@@ -38,6 +39,10 @@ import {
   FiShare2,
   FiLock,
   FiActivity,
+  FiLayers,
+  FiGrid,
+  FiSettings,
+  FiSearch,
 } from "react-icons/fi";
 
 const Dashboard = ({
@@ -47,6 +52,8 @@ const Dashboard = ({
   onLogout,
   isDarkMode,
   onToggleTheme,
+  sessionTime,
+  onUserUpdate,
 }) => {
   const navigate = useNavigate();
   const [currentTab, setCurrentTab] = useState("Dashboard");
@@ -54,11 +61,66 @@ const Dashboard = ({
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [assignments, setAssignments] = useState([]);
 
+  // All Trainings Tab State
+  const [allCourses, setAllCourses] = useState([]);
+  const [allLoading, setAllLoading] = useState(false);
+  const [allSearchTerm, setAllSearchTerm] = useState("");
+  const [allCategory, setAllCategory] = useState("All");
+  const [allSubTab, setAllSubTab] = useState("Tech Stack");
+
+  // My Training Special Sections
+  const [recommended, setRecommended] = useState([]);
+  const [oilGasCourses, setOilGasCourses] = useState([]);
+
+  // Profile Edit State
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileData, setProfileData] = useState({
+    Lms_full_name: user?.Lms_full_name || "",
+    Lms_bio: user?.Lms_bio || "",
+    Lms_category: user?.Lms_category || "General",
+  });
+
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        Lms_full_name: user.Lms_full_name || "",
+        Lms_bio: user.Lms_bio || "",
+        Lms_category: user.Lms_category || "General",
+      });
+    }
+  }, [user]);
+
+  const handleSaveProfile = async () => {
+    try {
+      const res = await api.put("/user/profile", profileData);
+      if (res.data) {
+        onUserUpdate(res.data);
+        setIsEditingProfile(false);
+        Swal.fire({
+          icon: "success",
+          title: "Profile Updated",
+          text: "Your changes have been saved successfully!",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      }
+    } catch (e) {
+      console.error("Error updating profile", e);
+      Swal.fire({
+        icon: "error",
+        title: "Update Failed",
+        text: "Something went wrong while saving your profile.",
+      });
+    }
+  };
+
   const handleViewCertificate = (course) => {
-    const certHtml = document.getElementById(`cert-template-${course.id}`).innerHTML;
+    const certHtml = document.getElementById(
+      `cert-template-${course.id}`,
+    ).innerHTML;
 
     Swal.fire({
-      title: 'Official Certificate of Achievement',
+      title: "Official Certificate of Achievement",
       html: `
         <div style="
           width: 100%;
@@ -93,11 +155,11 @@ const Dashboard = ({
       `,
       showConfirmButton: false,
       showCloseButton: true,
-      width: '800px',
-      background: 'var(--card-bg)',
+      width: "800px",
+      background: "var(--card-bg)",
       customClass: {
-        popup: 'premium-onsite-modal'
-      }
+        popup: "premium-onsite-modal",
+      },
     });
   };
 
@@ -105,7 +167,7 @@ const Dashboard = ({
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await api.get("/dashboard/stats");
+        const res = await api.get("/user/dashboard/stats");
         setStats(res.data);
       } catch (e) {
         console.error("Error fetching dashboard stats", e);
@@ -121,7 +183,7 @@ const Dashboard = ({
     };
     const fetchAssignments = async () => {
       try {
-        const res = await api.get("/assignments");
+        const res = await api.get("/user/assignments");
         setAssignments(res.data);
       } catch (e) {
         console.error("Error fetching assignments", e);
@@ -131,6 +193,46 @@ const Dashboard = ({
     fetchCourses();
     fetchAssignments();
   }, []);
+
+  // Fetch all courses for the Library tab
+  useEffect(() => {
+    if (currentTab === "All Trainings") {
+      const fetchAll = async () => {
+        try {
+          setAllLoading(true);
+          // category=All matches backend default check
+          const res = await api.get(
+            `/courses?limit=50&category=${allCategory}`,
+          );
+          setAllCourses(res.data.courses || []);
+        } catch (e) {
+          console.error("Error fetching library", e);
+        } finally {
+          setAllLoading(false);
+        }
+      };
+      fetchAll();
+    }
+  }, [currentTab, allCategory]);
+
+  useEffect(() => {
+    if (currentTab === "My Training") {
+      const fetchExtra = async () => {
+        try {
+          // Fetch Recommended (e.g. some top courses)
+          const recRes = await api.get("/courses?limit=3&category=Programming");
+          setRecommended(recRes.data.courses || []);
+
+          // Fetch Oil & Gas - ensure case sensitivity matches DB habits
+          const ogRes = await api.get("/courses?limit=3&category=Oil & Gas");
+          setOilGasCourses(ogRes.data.courses || []);
+        } catch (e) {
+          console.error("Error fetching extra trainings", e);
+        }
+      };
+      fetchExtra();
+    }
+  }, [currentTab]);
 
   const getAchievements = () => {
     const xp = user?.Lms_xp || 0;
@@ -149,8 +251,9 @@ const Dashboard = ({
     }));
   };
 
-  const handleCompleteAssignment = (id) => {
-    navigate(`/assignment/${id}`);
+  const handleCompleteTask = (task) => {
+    const route = task.type === "quiz" ? "quiz" : "assignment";
+    navigate(`/${route}/${task.id}`);
   };
 
   const renderTabContent = () => {
@@ -162,48 +265,26 @@ const Dashboard = ({
               className="dashboard-stats-grid"
               style={{ marginBottom: "2rem" }}
             >
-              {/* --- NEW XP & LEVEL SECTION --- */}
-              <section
-                className="edu-section premium-padding level-card-dashboard"
-                style={{
-                  gridColumn: "span 1",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "1.5rem",
-                }}
-              >
+              <section className="edu-section level-card-dashboard">
                 <div className="level-flex-dashboard">
                   <div className="level-text">
                     <span className="level-badge-premium">
                       LEVEL {Math.floor((user?.Lms_xp || 0) / 1000) + 1}
                     </span>
-                    <h2 style={{ marginTop: "0.5rem" }}>
+                    <h2 style={{ marginTop: "1rem" }}>
                       {user?.Lms_xp || 0} XP Total
                     </h2>
                     <p style={{ color: "var(--text-sub)", fontSize: "0.9rem" }}>
                       {1000 - ((user?.Lms_xp || 0) % 1000)} XP to next milestone
                     </p>
                   </div>
-                  <div
-                    className="xp-bar-container-dashboard"
-                    style={{ flex: 1 }}
-                  >
-                    <div
-                      className="xp-bar-track-dashboard"
-                      style={{
-                        height: "12px",
-                        background: "var(--border-color)",
-                        borderRadius: "10px",
-                        overflow: "hidden",
-                        position: "relative",
-                      }}
-                    >
+                  <div className="xp-bar-container-dashboard">
+                    <div className="xp-bar-track-dashboard">
                       <div
                         className="xp-bar-fill-premium"
                         style={{
                           width: `${((user?.Lms_xp || 0) % 1000) / 10}%`,
                           height: "100%",
-                          background: "var(--gradient-blue)",
                           transition: "width 1s ease",
                         }}
                       ></div>
@@ -212,16 +293,17 @@ const Dashboard = ({
                       style={{
                         display: "flex",
                         justifyContent: "space-between",
-                        marginTop: "0.5rem",
-                        fontSize: "0.8rem",
-                        fontWeight: "700",
+                        marginTop: "1rem",
+                        fontSize: "0.85rem",
+                        fontWeight: "800",
+                        color: "var(--text-sub)",
                       }}
                     >
                       <span>
-                        Level {Math.floor((user?.Lms_xp || 0) / 1000) + 1}
+                        Lvl {Math.floor((user?.Lms_xp || 0) / 1000) + 1}
                       </span>
                       <span>
-                        Level {Math.floor((user?.Lms_xp || 0) / 1000) + 2}
+                        Lvl {Math.floor((user?.Lms_xp || 0) / 1000) + 2}
                       </span>
                     </div>
                   </div>
@@ -455,7 +537,10 @@ const Dashboard = ({
                             borderRadius: "8px",
                             color: "var(--text-main)",
                           }}
-                          itemStyle={{ color: "var(--primary-blue)", fontWeight: "bold" }}
+                          itemStyle={{
+                            color: "var(--primary-blue)",
+                            fontWeight: "bold",
+                          }}
                         />
                         <Area
                           type="monotone"
@@ -818,8 +903,10 @@ const Dashboard = ({
 
                         // Unlock logic based on PP points as requested
                         let isUnlocked = lIdx === 0;
-                        if (lIdx === 1) isUnlocked = (user?.Lms_pp || 0) >= 2000;
-                        if (lIdx === 2) isUnlocked = (user?.Lms_pp || 0) >= 4000;
+                        if (lIdx === 1)
+                          isUnlocked = (user?.Lms_pp || 0) >= 2000;
+                        if (lIdx === 2)
+                          isUnlocked = (user?.Lms_pp || 0) >= 4000;
 
                         const allThisDone =
                           levelCourse && levelCourse.progress_pct >= 100;
@@ -1070,59 +1157,568 @@ const Dashboard = ({
               })()}
           </div>
         );
-      case "My Training":
+      case "My Training": {
+        const beginnerTraining = enrolledCourses.filter(
+          (c) => (c.level || "Beginner") === "Beginner",
+        );
+        const intermediateTraining = enrolledCourses.filter(
+          (c) => c.level === "Intermediate",
+        );
+        const advancedTraining = enrolledCourses.filter(
+          (c) => c.level === "Advanced",
+        );
+
+        const frontendTraining = enrolledCourses.filter(
+          (c) =>
+            c.category?.toLowerCase().includes("programming") ||
+            c.category?.toLowerCase().includes("frontend") ||
+            c.category?.toLowerCase().includes("web"),
+        );
+        const oilGasTraining = enrolledCourses.filter(
+          (c) =>
+            c.category?.toLowerCase().includes("oil") ||
+            c.category?.toLowerCase().includes("gas") ||
+            c.category?.toLowerCase().includes("petroleum"),
+        );
+        const otherTraining = enrolledCourses.filter(
+          (c) => !frontendTraining.includes(c) && !oilGasTraining.includes(c),
+        );
+
         return (
           <div className="edu-content-scroll">
-            <div className="my-courses-grid-modern">
-              {enrolledCourses.map((course) => (
-                <div
-                  className="course-item-card-mini"
-                  key={course.id}
-                  onClick={() => onHomeClick(`/player/${course.id}`)}
-                >
-                  <img
-                    src={
-                      course.thumbnail ||
-                      "https://images.unsplash.com/photo-1516321318423-f06f85e504b3"
-                    }
-                    alt={course.title}
-                    onError={(e) => {
-                      e.target.src =
-                        "https://images.unsplash.com/photo-1516321318423-f06f85e504b3";
+            {/* --- LEVEL-BASED ROADMAP SECTION --- */}
+            <section className="edu-section premium-padding">
+              <h2
+                className="section-title"
+                style={{ display: "flex", alignItems: "center", gap: "10px" }}
+              >
+                <FiLayers style={{ color: "var(--primary-blue)" }} /> Skill
+                Evolution: Your Roadmap
+              </h2>
+              <p
+                style={{
+                  color: "var(--text-sub)",
+                  marginBottom: "2.5rem",
+                  fontSize: "0.95rem",
+                }}
+              >
+                Courses organized by complexity to help you transition from
+                fundamentals to expert mastery.
+              </p>
+
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "3rem",
+                  marginBottom: "3rem",
+                }}
+              >
+                {/* 🟢 Beginner Row */}
+                <div>
+                  <h4
+                    style={{
+                      fontSize: "0.8rem",
+                      fontWeight: "900",
+                      color: "#10b981",
+                      textTransform: "uppercase",
+                      letterSpacing: "1px",
+                      marginBottom: "1rem",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
                     }}
-                  />
-                  <div className="course-item-details">
-                    <h3>{course.title}</h3>
-                    <p>
-                      {course.category} • {course.level || "Beginner"} •{" "}
-                      {Math.round(course.progress_pct)}% Done
-                    </p>
-                    <div className="course-item-footer">
-                      <span
-                        className={`status-badge ${course.progress_pct === 100 ? "live" : "draft"}`}
+                  >
+                    <div
+                      style={{
+                        width: "8px",
+                        height: "8px",
+                        background: "#10b981",
+                        borderRadius: "50%",
+                      }}
+                    ></div>
+                    Beginner Fundamentals ({beginnerTraining.length})
+                  </h4>
+                  <div className="my-courses-grid-modern">
+                    {beginnerTraining.map((course) => (
+                      <div
+                        className="course-item-card-mini"
+                        key={course.id}
+                        onClick={() => onHomeClick(`/player/${course.id}`)}
+                        style={{ borderLeft: "4px solid #10b981" }}
+                      >
+                        <img
+                          src={
+                            course.thumbnail ||
+                            "https://images.unsplash.com/photo-1516321318423-f06f85e504b3"
+                          }
+                          alt={course.title}
+                          style={{ height: "100px", objectFit: "cover" }}
+                        />
+                        <div className="course-item-details">
+                          <h3 style={{ fontSize: "1rem" }}>{course.title}</h3>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              marginTop: "0.5rem",
+                              alignItems: "center",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: "0.7rem",
+                                fontWeight: "700",
+                                color: "var(--text-sub)",
+                              }}
+                            >
+                              {course.category}
+                            </span>
+                            <span
+                              className={`status-badge ${course.progress_pct === 100 ? "live" : "draft"}`}
+                              style={{
+                                fontSize: "0.6rem",
+                                padding: "2px 8px",
+                                background:
+                                  course.progress_pct === 100
+                                    ? "#dcfce7"
+                                    : "#f0fdf4",
+                                color:
+                                  course.progress_pct === 100
+                                    ? "#166534"
+                                    : "#10b981",
+                              }}
+                            >
+                              {Math.round(course.progress_pct)}%
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {beginnerTraining.length === 0 && (
+                      <p
                         style={{
-                          background:
-                            course.progress_pct === 100 ? "#dcfce7" : "#dbeafe",
-                          color:
-                            course.progress_pct === 100 ? "#166534" : "#1e40af",
+                          fontSize: "0.85rem",
+                          color: "var(--text-sub)",
+                          fontStyle: "italic",
+                          paddingLeft: "1.5rem",
                         }}
                       >
-                        {course.progress_pct === 100
-                          ? "Completed"
-                          : "In Progress"}
-                      </span>
-                    </div>
+                        No active beginner modules.
+                      </p>
+                    )}
                   </div>
                 </div>
-              ))}
-              {enrolledCourses.length === 0 && (
-                <div className="edu-placeholder-view">
-                  <h3>You haven't started any modules yet.</h3>
+
+                {/* 🟡 Intermediate Row */}
+                <div>
+                  <h4
+                    style={{
+                      fontSize: "0.8rem",
+                      fontWeight: "900",
+                      color: "#f59e0b",
+                      textTransform: "uppercase",
+                      letterSpacing: "1px",
+                      marginBottom: "1rem",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "8px",
+                        height: "8px",
+                        background: "#f59e0b",
+                        borderRadius: "50%",
+                      }}
+                    ></div>
+                    Intermediate Proficiency ({intermediateTraining.length})
+                  </h4>
+                  <div className="my-courses-grid-modern">
+                    {intermediateTraining.map((course) => (
+                      <div
+                        className="course-item-card-mini"
+                        key={course.id}
+                        onClick={() => onHomeClick(`/player/${course.id}`)}
+                        style={{ borderLeft: "4px solid #f59e0b" }}
+                      >
+                        <img
+                          src={
+                            course.thumbnail ||
+                            "https://images.unsplash.com/photo-1516321318423-f06f85e504b3"
+                          }
+                          alt={course.title}
+                          style={{ height: "100px", objectFit: "cover" }}
+                        />
+                        <div className="course-item-details">
+                          <h3 style={{ fontSize: "1rem" }}>{course.title}</h3>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              marginTop: "0.5rem",
+                              alignItems: "center",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: "0.7rem",
+                                fontWeight: "700",
+                                color: "var(--text-sub)",
+                              }}
+                            >
+                              {course.category}
+                            </span>
+                            <span
+                              className={`status-badge ${course.progress_pct === 100 ? "live" : "draft"}`}
+                              style={{
+                                fontSize: "0.6rem",
+                                padding: "2px 8px",
+                                background:
+                                  course.progress_pct === 100
+                                    ? "#dcfce7"
+                                    : "#fffbeb",
+                                color:
+                                  course.progress_pct === 100
+                                    ? "#166534"
+                                    : "#d97706",
+                              }}
+                            >
+                              {Math.round(course.progress_pct)}%
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {intermediateTraining.length === 0 && (
+                      <p
+                        style={{
+                          fontSize: "0.85rem",
+                          color: "var(--text-sub)",
+                          fontStyle: "italic",
+                          paddingLeft: "1.5rem",
+                        }}
+                      >
+                        No active intermediate modules.
+                      </p>
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
+
+                {/* 🔴 Advanced Row */}
+                <div>
+                  <h4
+                    style={{
+                      fontSize: "0.8rem",
+                      fontWeight: "900",
+                      color: "#ef4444",
+                      textTransform: "uppercase",
+                      letterSpacing: "1px",
+                      marginBottom: "1rem",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "8px",
+                        height: "8px",
+                        background: "#ef4444",
+                        borderRadius: "50%",
+                      }}
+                    ></div>
+                    Advanced Mastery ({advancedTraining.length})
+                  </h4>
+                  <div className="my-courses-grid-modern">
+                    {advancedTraining.map((course) => (
+                      <div
+                        className="course-item-card-mini"
+                        key={course.id}
+                        onClick={() => onHomeClick(`/player/${course.id}`)}
+                        style={{ borderLeft: "4px solid #ef4444" }}
+                      >
+                        <img
+                          src={
+                            course.thumbnail ||
+                            "https://images.unsplash.com/photo-1516321318423-f06f85e504b3"
+                          }
+                          alt={course.title}
+                          style={{ height: "100px", objectFit: "cover" }}
+                        />
+                        <div className="course-item-details">
+                          <h3 style={{ fontSize: "1rem" }}>{course.title}</h3>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              marginTop: "0.5rem",
+                              alignItems: "center",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: "0.7rem",
+                                fontWeight: "700",
+                                color: "var(--text-sub)",
+                              }}
+                            >
+                              {course.category}
+                            </span>
+                            <span
+                              className={`status-badge ${course.progress_pct === 100 ? "live" : "draft"}`}
+                              style={{
+                                fontSize: "0.6rem",
+                                padding: "2px 8px",
+                                background:
+                                  course.progress_pct === 100
+                                    ? "#dcfce7"
+                                    : "#fef2f2",
+                                color:
+                                  course.progress_pct === 100
+                                    ? "#166534"
+                                    : "#dc2626",
+                              }}
+                            >
+                              {Math.round(course.progress_pct)}%
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {advancedTraining.length === 0 && (
+                      <p
+                        style={{
+                          fontSize: "0.85rem",
+                          color: "var(--text-sub)",
+                          fontStyle: "italic",
+                          paddingLeft: "1.5rem",
+                        }}
+                      >
+                        No active advanced modules.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* --- FRONTEND / TECH SECTION --- */}
+            <section
+              className="edu-section premium-padding"
+              style={{ marginTop: "4rem" }}
+            >
+              <h2
+                className="section-title"
+                style={{ display: "flex", alignItems: "center", gap: "10px" }}
+              >
+                <FiPlayCircle style={{ color: "var(--primary-blue)" }} />{" "}
+                Frontend & Tech Stack
+              </h2>
+              <p style={{ color: "var(--text-sub)", marginBottom: "2rem" }}>
+                Your active learning paths in software development and modern
+                technologies.
+              </p>
+
+              <div className="my-courses-grid-modern">
+                {frontendTraining.map((course) => (
+                  <div
+                    className="course-item-card-mini"
+                    key={course.id}
+                    onClick={() => onHomeClick(`/player/${course.id}`)}
+                  >
+                    <img
+                      src={
+                        course.thumbnail ||
+                        "https://images.unsplash.com/photo-1516321318423-f06f85e504b3"
+                      }
+                      alt={course.title}
+                      onError={(e) => {
+                        e.target.src =
+                          "https://images.unsplash.com/photo-1516321318423-f06f85e504b3";
+                      }}
+                    />
+                    <div className="course-item-details">
+                      <h3>{course.title}</h3>
+                      <p>
+                        {course.category} • {course.level || "Beginner"} •{" "}
+                        {Math.round(course.progress_pct)}% Done
+                      </p>
+                      <div className="course-item-footer">
+                        <span
+                          className={`status-badge ${course.progress_pct === 100 ? "live" : "draft"}`}
+                          style={{
+                            background:
+                              course.progress_pct === 100
+                                ? "#dcfce7"
+                                : "#dbeafe",
+                            color:
+                              course.progress_pct === 100
+                                ? "#166534"
+                                : "#1e40af",
+                          }}
+                        >
+                          {course.progress_pct === 100
+                            ? "Completed"
+                            : "In Progress"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {frontendTraining.length === 0 && (
+                  <div
+                    className="edu-placeholder-view"
+                    style={{
+                      textAlign: "center",
+                      padding: "3rem",
+                      gridColumn: "1/-1",
+                      background: "rgba(0,0,0,0.02)",
+                      borderRadius: "1.5rem",
+                      border: "1px dashed var(--border-color)",
+                    }}
+                  >
+                    <p style={{ color: "var(--text-sub)", margin: 0 }}>
+                      No active frontend courses. Explore the library to start
+                      one!
+                    </p>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* --- OIL & GAS SECTION --- */}
+            <section
+              className="edu-section premium-padding"
+              style={{ marginTop: "2rem" }}
+            >
+              <h2
+                className="section-title"
+                style={{ display: "flex", alignItems: "center", gap: "10px" }}
+              >
+                <FiActivity style={{ color: "#10b981" }} /> Oil & Gas Domain
+                Training
+              </h2>
+              <p style={{ color: "var(--text-sub)", marginBottom: "2rem" }}>
+                Mastering industry-specific knowledge and operational excellence
+                in Energy.
+              </p>
+
+              <div className="my-courses-grid-modern">
+                {oilGasTraining.map((course) => (
+                  <div
+                    className="course-item-card-mini"
+                    key={course.id}
+                    onClick={() => onHomeClick(`/player/${course.id}`)}
+                  >
+                    <img
+                      src={
+                        course.thumbnail ||
+                        "https://images.unsplash.com/photo-1516321318423-f06f85e504b3"
+                      }
+                      alt={course.title}
+                      onError={(e) => {
+                        e.target.src =
+                          "https://images.unsplash.com/photo-1516321318423-f06f85e504b3";
+                      }}
+                    />
+                    <div className="course-item-details">
+                      <h3>{course.title}</h3>
+                      <p>
+                        {course.category} • {course.level || "Beginner"} •{" "}
+                        {Math.round(course.progress_pct)}% Done
+                      </p>
+                      <div className="course-item-footer">
+                        <span
+                          className={`status-badge ${course.progress_pct === 100 ? "live" : "draft"}`}
+                          style={{
+                            background:
+                              course.progress_pct === 100
+                                ? "#dcfce7"
+                                : "#dbeafe",
+                            color:
+                              course.progress_pct === 100
+                                ? "#166534"
+                                : "#1e40af",
+                          }}
+                        >
+                          {course.progress_pct === 100
+                            ? "Completed"
+                            : "In Progress"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {oilGasTraining.length === 0 && (
+                  <div
+                    className="edu-placeholder-view"
+                    style={{
+                      textAlign: "center",
+                      padding: "3rem",
+                      gridColumn: "1/-1",
+                      background: "rgba(0,0,0,0.02)",
+                      borderRadius: "1.5rem",
+                      border: "1px dashed var(--border-color)",
+                    }}
+                  >
+                    <p style={{ color: "var(--text-sub)", margin: 0 }}>
+                      No active Oil & Gas modules. Check recommended domain
+                      tracks below.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* --- OTHER TRAINING --- */}
+            {otherTraining.length > 0 && (
+              <section
+                className="edu-section premium-padding"
+                style={{ marginTop: "2rem" }}
+              >
+                <h3
+                  className="section-title"
+                  style={{ fontSize: "1.1rem", opacity: 0.8 }}
+                >
+                  Other Enrolled Modules
+                </h3>
+                <div className="my-courses-grid-modern">
+                  {otherTraining.map((course) => (
+                    <div
+                      className="course-item-card-mini"
+                      key={course.id}
+                      onClick={() => onHomeClick(`/player/${course.id}`)}
+                    >
+                      <img
+                        src={
+                          course.thumbnail ||
+                          "https://images.unsplash.com/photo-1516321318423-f06f85e504b3"
+                        }
+                        alt={course.title}
+                        style={{ height: "80px", objectFit: "cover" }}
+                      />
+                      <div className="course-item-details">
+                        <h3 style={{ fontSize: "0.95rem" }}>{course.title}</h3>
+                        <p
+                          style={{
+                            fontSize: "0.75rem",
+                            color: "var(--text-sub)",
+                          }}
+                        >
+                          {course.category} •{" "}
+                          <strong>{Math.round(course.progress_pct)}%</strong>
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
         );
+      }
       case "Assignments":
         return (
           <div className="edu-content-scroll">
@@ -1130,7 +1726,12 @@ const Dashboard = ({
               <div className="section-header-flex">
                 <h2 className="section-title">Internal Assignments & Tasks</h2>
                 <span className="count-badge">
-                  {assignments.filter((a) => !a.completed).length} Pending
+                  {
+                    assignments.filter(
+                      (a) => a.type === "assignment" && !a.completed,
+                    ).length
+                  }{" "}
+                  Pending
                 </span>
               </div>
               <div className="activity-list">
@@ -1215,7 +1816,7 @@ const Dashboard = ({
                       </div>
                       <button
                         className="view-cat-btn-mini"
-                        onClick={() => handleCompleteAssignment(task.id)}
+                        onClick={() => handleCompleteTask(task)}
                         style={{
                           marginLeft: "auto",
                           padding: "0.45rem 1.2rem",
@@ -1387,7 +1988,7 @@ const Dashboard = ({
                       </div>
                       <button
                         className="view-cat-btn-mini"
-                        onClick={() => handleCompleteAssignment(task.id)}
+                        onClick={() => handleCompleteTask(task)}
                         style={{
                           marginLeft: "auto",
                           padding: "0.45rem 1.2rem",
@@ -1487,105 +2088,90 @@ const Dashboard = ({
         return (
           <div className="edu-content-scroll">
             <section className="edu-section premium-padding">
-              <h2 className="section-title">XP Achievements & Tiers</h2>
-              <div
-                className="achievements-grid-dashboard"
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-                  gap: "1.5rem",
-                }}
-              >
-                {getAchievements().map((ach, i) => (
-                  <div
-                    key={i}
-                    className={`ach-card-premium ${ach.unlocked ? "unlocked" : "locked"}`}
-                    onClick={() => {
-                      if (ach.unlocked) {
-                        Swal.fire({
-                          title: `<h2 style="color: #1a1a1a; margin-top: 20px;">${ach.name} Achievement</h2>`,
-                          html: `
-                            <div style="font-size: 80px; margin: 30px 0;">${ach.icon}</div>
-                            <p style="color: #64748b; font-size: 1.1rem; margin-bottom: 10px;">
-                              Congratulations! You've reached <b>${ach.threshold.toLocaleString()} XP</b> and unlocked this prestigious tier.
-                            </p>
-                            <p style="color: var(--text-sub); font-size: 0.9rem; font-weight: 600;">
-                               🏆 This achievement is part of your professional Oges LMS profile.
-                            </p>
-                          `,
-                          showConfirmButton: true,
-                          confirmButtonText: 'Great!',
-                          confirmButtonColor: 'var(--primary-blue)',
-                          showCloseButton: true,
-                          background: "#fff",
-                          borderRadius: "24px",
-                        });
-                      }
-                    }}
-                    style={{
-                      background: ach.unlocked
-                        ? "var(--card-bg)"
-                        : "rgba(0,0,0,0.02)",
-                      padding: "2rem",
-                      borderRadius: "1.5rem",
-                      textAlign: "center",
-                      border: ach.unlocked
-                        ? "2px solid var(--primary-blue)"
-                        : "1px dashed var(--border-color)",
-                      opacity: ach.unlocked ? 1 : 0.6,
-                      transition: "all 0.3s ease",
-                      cursor: ach.unlocked ? "pointer" : "default",
-                    }}
-                  >
+              <div className="achievements-grid-dashboard">
+                {getAchievements().map((ach, i) => {
+                  const xp = user?.Lms_xp || 0;
+                  const progress = Math.min(100, (xp / ach.threshold) * 100);
+
+                  return (
                     <div
-                      className="ach-icon-circle"
-                      style={{ fontSize: "3rem", marginBottom: "1rem" }}
+                      key={i}
+                      className="badge-showcase-card"
+                      onClick={() => {
+                        if (ach.unlocked) {
+                          Swal.fire({
+                            title: `<h2 style="font-family: inherit;">${ach.name} Unlocked!</h2>`,
+                            html: `
+                              <div style="font-size: 100px; margin: 2rem 0;">${ach.icon}</div>
+                              <p style="color: var(--text-sub); line-height: 1.6;">
+                                Incredible work! You've crossed the <b>${ach.threshold.toLocaleString()} XP</b> threshold. 
+                                This badge is now a permanent part of your professional Oges LMS profile.
+                              </p>
+                            `,
+                            confirmButtonText: "Keep it up!",
+                            confirmButtonColor: "var(--primary-blue)",
+                            background: "var(--card-bg)",
+                            color: "var(--text-main)",
+                            borderRadius: "30px",
+                            padding: "2rem",
+                          });
+                        }
+                      }}
                     >
-                      {ach.unlocked ? ach.icon : "🔒"}
+                      <div
+                        className={`badge-card-inner ${ach.unlocked ? "unlocked" : "locked"}`}
+                      >
+                        <div className="badge-glow-effect">{ach.icon}</div>
+                        <div className="badge-info">
+                          <h4>{ach.name} Achievement</h4>
+                          <p>
+                            Unlock at{" "}
+                            <strong>{ach.threshold.toLocaleString()} XP</strong>
+                          </p>
+                          {!ach.unlocked && (
+                            <div
+                              className="badge-progress-container"
+                              style={{ marginTop: "1rem", width: "100%" }}
+                            >
+                              <div className="badge-progress-track">
+                                <div
+                                  className="badge-progress-fill"
+                                  style={{ width: `${progress}%` }}
+                                ></div>
+                              </div>
+                              <span
+                                style={{
+                                  fontSize: "0.75rem",
+                                  color: "var(--text-sub)",
+                                  marginTop: "0.5rem",
+                                  display: "block",
+                                }}
+                              >
+                                {Math.round(progress)}% of the way
+                              </span>
+                            </div>
+                          )}
+                          {ach.unlocked && (
+                            <span
+                              style={{
+                                display: "block",
+                                marginTop: "1rem",
+                                color: "#10b981",
+                                fontWeight: "800",
+                                fontSize: "0.85rem",
+                                background: "rgba(16,185,129,0.1)",
+                                padding: "4px 12px",
+                                borderRadius: "100px",
+                              }}
+                            >
+                              COMPLETED
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <h3 style={{ fontSize: "1.1rem", marginBottom: "0.5rem" }}>
-                      {ach.name}
-                    </h3>
-                    <p
-                      style={{ fontSize: "0.85rem", color: "var(--text-sub)" }}
-                    >
-                      {ach.threshold.toLocaleString()} XP Points
-                    </p>
-                    {ach.unlocked ? (
-                      <span
-                        className="unlocked-badge"
-                        style={{
-                          background: "#dcfce7",
-                          color: "#166534",
-                          padding: "0.2rem 0.6rem",
-                          borderRadius: "100px",
-                          fontSize: "0.7rem",
-                          fontWeight: "800",
-                          marginTop: "1rem",
-                          display: "inline-block",
-                        }}
-                      >
-                        UNLOCKED
-                      </span>
-                    ) : (
-                      <span
-                        className="locked-badge"
-                        style={{
-                          background: "#f1f5f9",
-                          color: "#64748b",
-                          padding: "0.2rem 0.6rem",
-                          borderRadius: "100px",
-                          fontSize: "0.7rem",
-                          fontWeight: "800",
-                          marginTop: "1rem",
-                          display: "inline-block",
-                        }}
-                      >
-                        LOCKED
-                      </span>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <h2 className="section-title" style={{ marginTop: "4rem" }}>
@@ -1645,6 +2231,7 @@ const Dashboard = ({
 
               {enrolledCourses && enrolledCourses.length > 0 ? (
                 <div
+                  className="cert-container-main"
                   style={{
                     display: "flex",
                     flexDirection: "column",
@@ -1813,12 +2400,12 @@ const Dashboard = ({
                                     transition: "transform 0.2s",
                                   }}
                                   onMouseOver={(e) =>
-                                  (e.currentTarget.style.transform =
-                                    "scale(1.02)")
+                                    (e.currentTarget.style.transform =
+                                      "scale(1.02)")
                                   }
                                   onMouseOut={(e) =>
-                                  (e.currentTarget.style.transform =
-                                    "scale(1)")
+                                    (e.currentTarget.style.transform =
+                                      "scale(1)")
                                   }
                                 >
                                   <FiAward /> View Certificate
@@ -1836,13 +2423,13 @@ const Dashboard = ({
                                     textAlign: "center",
                                     color: "#111",
                                     overflow: "hidden",
-                                    background: "#fff"
+                                    background: "#fff",
                                   }}
                                 >
                                   {/* Base Template Image */}
-                                  <img 
-                                    src="/Certificate_Template.png" 
-                                    alt="Template" 
+                                  <img
+                                    src="/Certificate_Template.png"
+                                    alt="Template"
                                     style={{
                                       position: "absolute",
                                       top: 0,
@@ -1850,12 +2437,18 @@ const Dashboard = ({
                                       width: "1000px",
                                       height: "700px",
                                       objectFit: "cover",
-                                      zIndex: 1
+                                      zIndex: 1,
                                     }}
                                   />
 
                                   {/* Overlay Content */}
-                                  <div style={{ position: "relative", zIndex: 10, height: "100%" }}>
+                                  <div
+                                    style={{
+                                      position: "relative",
+                                      zIndex: 10,
+                                      height: "100%",
+                                    }}
+                                  >
                                     {/* learner Name */}
                                     <div
                                       style={{
@@ -1890,8 +2483,11 @@ const Dashboard = ({
                                         lineHeight: "1.4",
                                       }}
                                     >
-                                      For successfully completing the comprehensive training program<br />
-                                      and demonstrating exceptional proficiency in
+                                      For successfully completing the
+                                      comprehensive training program
+                                      <br />
+                                      and demonstrating exceptional proficiency
+                                      in
                                     </div>
 
                                     {/* Course Title */}
@@ -1924,8 +2520,25 @@ const Dashboard = ({
                                         color: "#1e293b",
                                       }}
                                     >
-                                      {new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
-                                      <div style={{ fontSize: "11px", color: "#64748b", marginTop: "4px", fontWeight: "600", textTransform: 'uppercase' }}>Date Issued</div>
+                                      {new Date().toLocaleDateString(
+                                        undefined,
+                                        {
+                                          year: "numeric",
+                                          month: "long",
+                                          day: "numeric",
+                                        },
+                                      )}
+                                      <div
+                                        style={{
+                                          fontSize: "11px",
+                                          color: "#64748b",
+                                          marginTop: "4px",
+                                          fontWeight: "600",
+                                          textTransform: "uppercase",
+                                        }}
+                                      >
+                                        Date Issued
+                                      </div>
                                     </div>
 
                                     <div
@@ -1937,11 +2550,23 @@ const Dashboard = ({
                                         fontSize: "22px",
                                         fontWeight: "900",
                                         color: "#1e1e1e",
-                                        fontFamily: "'Dancing Script', cursive, serif"
+                                        fontFamily:
+                                          "'Dancing Script', cursive, serif",
                                       }}
                                     >
                                       Amit Kumar
-                                      <div style={{ fontSize: "11px", color: "#64748b", marginTop: "4px", fontWeight: "600", fontFamily: "'Outfit', sans-serif", textTransform: 'uppercase' }}>Platform Director</div>
+                                      <div
+                                        style={{
+                                          fontSize: "11px",
+                                          color: "#64748b",
+                                          marginTop: "4px",
+                                          fontWeight: "600",
+                                          fontFamily: "'Outfit', sans-serif",
+                                          textTransform: "uppercase",
+                                        }}
+                                      >
+                                        Platform Director
+                                      </div>
                                     </div>
 
                                     {/* Verification Stamp */}
@@ -1957,7 +2582,9 @@ const Dashboard = ({
                                         fontWeight: "700",
                                       }}
                                     >
-                                      VERIFICATION ID: CERT-{course.id}-{user?.id || "LE"} • OGES ACADEMIC RECOGNITION
+                                      VERIFICATION ID: CERT-{course.id}-
+                                      {user?.id || "LE"} • OGES ACADEMIC
+                                      RECOGNITION
                                     </div>
                                   </div>
                                 </div>
@@ -1968,22 +2595,22 @@ const Dashboard = ({
                       {enrolledCourses.filter(
                         (c) => Math.round(c.progress_pct) >= 100,
                       ).length === 0 && (
-                          <div
-                            style={{
-                              gridColumn: "1 / -1",
-                              padding: "3rem",
-                              textAlign: "center",
-                              background: "rgba(0,0,0,0.02)",
-                              borderRadius: "1.5rem",
-                              border: "1px dashed var(--border-color)",
-                            }}
-                          >
-                            <p style={{ color: "var(--text-sub)" }}>
-                              You haven't earned any certificates yet. Complete a
-                              module 100% to unlock your credential.
-                            </p>
-                          </div>
-                        )}
+                        <div
+                          style={{
+                            gridColumn: "1 / -1",
+                            padding: "3rem",
+                            textAlign: "center",
+                            background: "rgba(0,0,0,0.02)",
+                            borderRadius: "1.5rem",
+                            border: "1px dashed var(--border-color)",
+                          }}
+                        >
+                          <p style={{ color: "var(--text-sub)" }}>
+                            You haven't earned any certificates yet. Complete a
+                            module 100% to unlock your credential.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -2109,6 +2736,795 @@ const Dashboard = ({
             </section>
           </div>
         );
+      case "All Trainings": {
+        const filteredAllCourses = allCourses.filter((c) => {
+          const matchesSearch = c.title
+            .toLowerCase()
+            .includes(allSearchTerm.toLowerCase());
+          const isDomain =
+            c.category?.toLowerCase().includes("oil") ||
+            c.category?.toLowerCase().includes("gas");
+
+          if (allSubTab === "Domain") {
+            return matchesSearch && isDomain;
+          } else {
+            // Tech Stack case
+            const matchesCat =
+              allCategory === "All" || c.category === allCategory;
+            return matchesSearch && matchesCat && !isDomain;
+          }
+        });
+
+        return (
+          <div className="edu-content-scroll">
+            <section className="edu-section premium-padding">
+              <div
+                className="section-header-flex"
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-end",
+                  marginBottom: "3rem",
+                  borderBottom: "1px solid var(--border-color)",
+                  paddingBottom: "1rem",
+                }}
+              >
+                <div>
+                  <h2 className="section-title">Training Library</h2>
+                  <div
+                    style={{ display: "flex", gap: "2rem", marginTop: "1rem" }}
+                  >
+                    {["Tech Stack", "Domain"].map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => setAllSubTab(t)}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          padding: "0.5rem 0",
+                          fontSize: "1rem",
+                          fontWeight: "800",
+                          color:
+                            allSubTab === t
+                              ? "var(--primary-blue)"
+                              : "var(--text-sub)",
+                          cursor: "pointer",
+                          position: "relative",
+                          transition: "all 0.3s",
+                        }}
+                      >
+                        {t}
+                        {allSubTab === t && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              bottom: "-1.1rem",
+                              left: 0,
+                              width: "100%",
+                              height: "3px",
+                              background: "var(--primary-blue)",
+                              borderRadius: "10px",
+                            }}
+                          ></div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {allLoading ? (
+                <div style={{ textAlign: "center", padding: "5rem" }}>
+                  <div className="dash-spinner"></div>
+                  <p>Loading the library...</p>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "3rem",
+                  }}
+                >
+                  {allSubTab === "Tech Stack" ? (
+                    <>
+                      {/* FRONTEND Section */}
+                      {filteredAllCourses.filter((c) =>
+                        c.category?.toLowerCase().includes("frontend"),
+                      ).length > 0 && (
+                        <div>
+                          <h4
+                            style={{
+                              fontSize: "0.75rem",
+                              fontWeight: "900",
+                              color: "var(--text-sub)",
+                              textTransform: "uppercase",
+                              letterSpacing: "1px",
+                              marginBottom: "1rem",
+                            }}
+                          >
+                            FRONTEND
+                          </h4>
+                          <div
+                            className="all-courses-grid-lms"
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns:
+                                "repeat(auto-fill, minmax(300px, 1fr))",
+                              gap: "2rem",
+                            }}
+                          >
+                            {filteredAllCourses
+                              .filter((c) =>
+                                c.category?.toLowerCase().includes("frontend"),
+                              )
+                              .map((course) => (
+                                <div
+                                  className="track-card-mini"
+                                  key={course.id}
+                                  style={{
+                                    background: "var(--card-bg)",
+                                    border: "1px solid var(--border-color)",
+                                    borderRadius: "1.5rem",
+                                    overflow: "hidden",
+                                    cursor: "pointer",
+                                    transition: "transform 0.3s",
+                                  }}
+                                  onClick={() =>
+                                    navigate(`/player/${course.id}`)
+                                  }
+                                >
+                                  <div
+                                    style={{
+                                      height: "160px",
+                                      background:
+                                        course.thumbnail ||
+                                        "var(--gradient-blue)",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                    }}
+                                  >
+                                    {/* If the backend provides actual thumbnails, we use them. Otherwise, placeholder */}
+                                    <img
+                                      src={
+                                        course.thumbnail ||
+                                        "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400"
+                                      }
+                                      alt={course.title}
+                                      style={{
+                                        width: "100%",
+                                        height: "100%",
+                                        objectFit: "cover",
+                                        opacity: course.thumbnail ? 1 : 0.8,
+                                      }}
+                                    />
+                                  </div>
+                                  <div style={{ padding: "1.5rem" }}>
+                                    <span
+                                      style={{
+                                        fontSize: "0.7rem",
+                                        fontWeight: "900",
+                                        color: "var(--primary-orange)",
+                                        textTransform: "uppercase",
+                                        letterSpacing: "1px",
+                                      }}
+                                    >
+                                      {course.category}
+                                    </span>
+                                    <h4
+                                      style={{
+                                        margin: "0.5rem 0",
+                                        fontSize: "1.1rem",
+                                      }}
+                                    >
+                                      {course.title}
+                                    </h4>
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "center",
+                                        marginTop: "1rem",
+                                      }}
+                                    >
+                                      <span
+                                        style={{
+                                          fontSize: "0.8rem",
+                                          color: "var(--text-sub)",
+                                          fontWeight: "600",
+                                        }}
+                                      >
+                                        <FiLayers />{" "}
+                                        {course.chapters_count || 0} Chapters
+                                      </span>
+                                      <button
+                                        className="sidebar-link active"
+                                        style={{
+                                          width: "auto",
+                                          padding: "0.5rem 1rem",
+                                          fontSize: "0.8rem",
+                                          margin: 0,
+                                        }}
+                                      >
+                                        Start
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* ALL TRACKS Section */}
+                      {filteredAllCourses.filter(
+                        (c) => !c.category?.toLowerCase().includes("frontend"),
+                      ).length > 0 && (
+                        <div>
+                          <h4
+                            style={{
+                              fontSize: "0.75rem",
+                              fontWeight: "900",
+                              color: "var(--text-sub)",
+                              textTransform: "uppercase",
+                              letterSpacing: "1px",
+                              marginBottom: "1rem",
+                            }}
+                          >
+                            ALL TRACKS
+                          </h4>
+                          <div
+                            className="all-courses-grid-lms"
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns:
+                                "repeat(auto-fill, minmax(300px, 1fr))",
+                              gap: "2rem",
+                            }}
+                          >
+                            {filteredAllCourses
+                              .filter(
+                                (c) =>
+                                  !c.category
+                                    ?.toLowerCase()
+                                    .includes("frontend"),
+                              )
+                              .map((course) => (
+                                <div
+                                  className="track-card-mini"
+                                  key={course.id}
+                                  style={{
+                                    background: "var(--card-bg)",
+                                    border: "1px solid var(--border-color)",
+                                    borderRadius: "1.5rem",
+                                    overflow: "hidden",
+                                    cursor: "pointer",
+                                    transition: "transform 0.3s",
+                                  }}
+                                  onClick={() =>
+                                    navigate(`/player/${course.id}`)
+                                  }
+                                >
+                                  <img
+                                    src={
+                                      course.thumbnail ||
+                                      "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400"
+                                    }
+                                    alt={course.title}
+                                    style={{
+                                      width: "100%",
+                                      height: "160px",
+                                      objectFit: "cover",
+                                    }}
+                                  />
+                                  <div style={{ padding: "1.5rem" }}>
+                                    <span
+                                      style={{
+                                        fontSize: "0.7rem",
+                                        fontWeight: "900",
+                                        color: "var(--primary-orange)",
+                                        textTransform: "uppercase",
+                                        letterSpacing: "1px",
+                                      }}
+                                    >
+                                      {course.category}
+                                    </span>
+                                    <h4
+                                      style={{
+                                        margin: "0.5rem 0",
+                                        fontSize: "1.1rem",
+                                      }}
+                                    >
+                                      {course.title}
+                                    </h4>
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "center",
+                                        marginTop: "1rem",
+                                      }}
+                                    >
+                                      <span
+                                        style={{
+                                          fontSize: "0.8rem",
+                                          color: "var(--text-sub)",
+                                          fontWeight: "600",
+                                        }}
+                                      >
+                                        <FiLayers />{" "}
+                                        {course.chapters_count || 0} Chapters
+                                      </span>
+                                      <button
+                                        className="sidebar-link active"
+                                        style={{
+                                          width: "auto",
+                                          padding: "0.5rem 1rem",
+                                          fontSize: "0.8rem",
+                                          margin: 0,
+                                        }}
+                                      >
+                                        Start
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    // Domain Section (No category grouping requested, just a grid)
+                    <div
+                      className="all-courses-grid-lms"
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns:
+                          "repeat(auto-fill, minmax(300px, 1fr))",
+                        gap: "2rem",
+                      }}
+                    >
+                      {filteredAllCourses.map((course) => (
+                        <div
+                          className="track-card-mini"
+                          key={course.id}
+                          style={{
+                            background: "var(--card-bg)",
+                            border: "1px solid var(--border-color)",
+                            borderRadius: "1.5rem",
+                            overflow: "hidden",
+                            cursor: "pointer",
+                            transition: "transform 0.3s",
+                          }}
+                          onClick={() => navigate(`/player/${course.id}`)}
+                        >
+                          <img
+                            src={
+                              course.thumbnail ||
+                              "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400"
+                            }
+                            alt={course.title}
+                            style={{
+                              width: "100%",
+                              height: "160px",
+                              objectFit: "cover",
+                            }}
+                          />
+                          <div style={{ padding: "1.5rem" }}>
+                            <span
+                              style={{
+                                fontSize: "0.7rem",
+                                fontWeight: "900",
+                                color: "var(--primary-orange)",
+                                textTransform: "uppercase",
+                                letterSpacing: "1px",
+                              }}
+                            >
+                              {course.category}
+                            </span>
+                            <h4
+                              style={{ margin: "0.5rem 0", fontSize: "1.1rem" }}
+                            >
+                              {course.title}
+                            </h4>
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                marginTop: "1rem",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontSize: "0.8rem",
+                                  color: "var(--text-sub)",
+                                  fontWeight: "600",
+                                }}
+                              >
+                                <FiLayers /> {course.chapters_count || 0}{" "}
+                                Chapters
+                              </span>
+                              <button
+                                className="sidebar-link active"
+                                style={{
+                                  width: "auto",
+                                  padding: "0.5rem 1rem",
+                                  fontSize: "0.8rem",
+                                  margin: 0,
+                                }}
+                              >
+                                Start
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {filteredAllCourses.length === 0 && (
+                    <div
+                      style={{
+                        gridColumn: "1/-1",
+                        textAlign: "center",
+                        padding: "5rem",
+                      }}
+                    >
+                      <FiSearch
+                        size={48}
+                        style={{ opacity: 0.2, marginBottom: "1rem" }}
+                      />
+                      <p style={{ color: "var(--text-sub)" }}>
+                        No trainings found matching your criteria.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </section>
+          </div>
+        );
+      }
+      case "Profile":
+        return (
+          <div className="edu-content-scroll">
+            <section
+              className="edu-section premium-padding"
+              style={{ maxWidth: "1000px", margin: "0 auto" }}
+            >
+              <div
+                className="settings-container-premium"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "350px 1fr",
+                  gap: "3rem",
+                }}
+              >
+                {/* Left: Quick Info Card */}
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "2rem",
+                  }}
+                >
+                  <div
+                    className="glass-card"
+                    style={{
+                      padding: "2.5rem",
+                      borderRadius: "30px",
+                      background: "var(--glass-bg)",
+                      border: "1px solid var(--glass-border)",
+                      textAlign: "center",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "120px",
+                        height: "120px",
+                        background: "var(--gradient-blue)",
+                        borderRadius: "50%",
+                        margin: "0 auto 1.5rem",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "3rem",
+                        color: "white",
+                        fontWeight: "800",
+                        boxShadow: "0 10px 25px rgba(59,130,246,0.3)",
+                      }}
+                    >
+                      {profileData.Lms_full_name?.charAt(0) ||
+                        user?.username?.charAt(0)}
+                    </div>
+                    <h2 style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>
+                      {profileData.Lms_full_name || user?.username}
+                    </h2>
+                    <p
+                      style={{
+                        color: "var(--text-sub)",
+                        fontSize: "0.9rem",
+                        marginBottom: "1.5rem",
+                      }}
+                    >
+                      {user?.role || "Learner"}
+                    </p>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr",
+                        gap: "10px",
+                        borderTop: "1px solid var(--border-color)",
+                        paddingTop: "1.5rem",
+                      }}
+                    >
+                      <div>
+                        <div
+                          style={{
+                            fontSize: "1.2rem",
+                            fontWeight: "800",
+                            color: "var(--primary-blue)",
+                          }}
+                        >
+                          {user?.Lms_xp || 0}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "0.7rem",
+                            color: "var(--text-sub)",
+                            fontWeight: "600",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          XP Points
+                        </div>
+                      </div>
+                      <div>
+                        <div
+                          style={{
+                            fontSize: "1.2rem",
+                            fontWeight: "800",
+                            color: "var(--primary-orange)",
+                          }}
+                        >
+                          {user?.Lms_pp || 0}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "0.7rem",
+                            color: "var(--text-sub)",
+                            fontWeight: "600",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          PP Units
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right: Detailed Settings Form */}
+                <div
+                  className="glass-card"
+                  style={{
+                    padding: "3rem",
+                    borderRadius: "30px",
+                    background: "var(--glass-bg)",
+                    border: "1px solid var(--glass-border)",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: "2rem",
+                    }}
+                  >
+                    <h3
+                      style={{
+                        fontSize: "1.3rem",
+                        margin: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                      }}
+                    >
+                      <FiSettings /> Account Information
+                    </h3>
+                    <button
+                      onClick={() => setIsEditingProfile(!isEditingProfile)}
+                      className="sidebar-link active"
+                      style={{
+                        width: "auto",
+                        margin: 0,
+                        padding: "0.5rem 1.2rem",
+                        height: "auto",
+                        borderRadius: "10px",
+                        background: isEditingProfile
+                          ? "#ef4444"
+                          : "var(--primary-blue)",
+                      }}
+                    >
+                      {isEditingProfile ? "Cancel" : "Edit Profile"}
+                    </button>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: "2rem",
+                      marginBottom: "2rem",
+                    }}
+                  >
+                    <div className="input-field-group">
+                      <label
+                        style={{
+                          display: "block",
+                          marginBottom: "0.8rem",
+                          fontSize: "0.85rem",
+                          fontWeight: "700",
+                          opacity: 0.7,
+                        }}
+                      >
+                        FULL NAME
+                      </label>
+                      <input
+                        type="text"
+                        readOnly={!isEditingProfile}
+                        value={profileData.Lms_full_name}
+                        onChange={(e) =>
+                          setProfileData({
+                            ...profileData,
+                            Lms_full_name: e.target.value,
+                          })
+                        }
+                        style={{
+                          width: "100%",
+                          padding: "1rem 1.5rem",
+                          borderRadius: "15px",
+                          border: "1px solid var(--border-color)",
+                          background: isEditingProfile
+                            ? "white"
+                            : "rgba(0,0,0,0.02)",
+                          outline: "none",
+                          fontSize: "0.95rem",
+                          color: isEditingProfile ? "black" : "var(--text-sub)",
+                        }}
+                      />
+                    </div>
+                    <div className="input-field-group">
+                      <label
+                        style={{
+                          display: "block",
+                          marginBottom: "0.8rem",
+                          fontSize: "0.85rem",
+                          fontWeight: "700",
+                          opacity: 0.7,
+                        }}
+                      >
+                        PRIMARY INTEREST
+                      </label>
+                      {isEditingProfile ? (
+                        <select
+                          value={profileData.Lms_category}
+                          onChange={(e) =>
+                            setProfileData({
+                              ...profileData,
+                              Lms_category: e.target.value,
+                            })
+                          }
+                          style={{
+                            width: "100%",
+                            padding: "1rem 1.5rem",
+                            borderRadius: "15px",
+                            border: "1px solid var(--border-color)",
+                            background: "white",
+                            outline: "none",
+                            fontSize: "0.95rem",
+                          }}
+                        >
+                          <option value="General">General Mastery</option>
+                          <option value="Frontend Development">
+                            Frontend Development
+                          </option>
+                          <option value="Backend Development">
+                            Backend Development
+                          </option>
+                          <option value="Data Science">Data Science</option>
+                          <option value="Artificial Intelligence">
+                            Artificial Intelligence
+                          </option>
+                          <option value="Oil & Gas">Oil & Gas Domain</option>
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          readOnly
+                          value={profileData.Lms_category}
+                          style={{
+                            width: "100%",
+                            padding: "1rem 1.5rem",
+                            borderRadius: "15px",
+                            border: "1px solid var(--border-color)",
+                            background: "rgba(0,0,0,0.02)",
+                            outline: "none",
+                            fontSize: "0.95rem",
+                            color: "var(--text-sub)",
+                          }}
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  <div
+                    className="input-field-group"
+                    style={{ marginBottom: "2rem" }}
+                  >
+                    <label
+                      style={{
+                        display: "block",
+                        marginBottom: "0.8rem",
+                        fontSize: "0.85rem",
+                        fontWeight: "700",
+                        opacity: 0.7,
+                      }}
+                    >
+                      PROFESSIONAL BIO
+                    </label>
+                    <textarea
+                      readOnly={!isEditingProfile}
+                      value={profileData.Lms_bio}
+                      onChange={(e) =>
+                        setProfileData({
+                          ...profileData,
+                          Lms_bio: e.target.value,
+                        })
+                      }
+                      style={{
+                        width: "100%",
+                        padding: "1rem 1.5rem",
+                        borderRadius: "15px",
+                        border: "1px solid var(--border-color)",
+                        background: isEditingProfile
+                          ? "white"
+                          : "rgba(0,0,0,0.02)",
+                        outline: "none",
+                        fontSize: "0.95rem",
+                        minHeight: "100px",
+                        resize: "none",
+                        color: isEditingProfile ? "black" : "var(--text-sub)",
+                      }}
+                    ></textarea>
+                  </div>
+
+                  {isEditingProfile && (
+                    <button
+                      onClick={handleSaveProfile}
+                      className="sidebar-link active"
+                      style={{
+                        width: "auto",
+                        padding: "1rem 2.5rem",
+                        borderRadius: "100px",
+                        marginLeft: "auto",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                      }}
+                    >
+                      <FiCheckCircle /> Save Changes
+                    </button>
+                  )}
+                </div>
+              </div>
+            </section>
+          </div>
+        );
       default:
         return null;
     }
@@ -2120,56 +3536,153 @@ const Dashboard = ({
         <div
           className="sidebar-header"
           onClick={() => onHomeClick("/")}
-          style={{ cursor: "pointer" }}
+          style={{ cursor: "pointer", padding: "1.5rem 1.5rem" }}
         >
-          <span className="edu-logo"> Learner 🎓</span>
+          <div className="flex item-start ">
+            <img src={logo} alt="Oges LMS" className="sidebar-logo-img" />
+            <span className="sub-brand relative b-5 ">LMS</span>
+          </div>
         </div>
+
         <nav className="sidebar-nav">
-          {[
-            { name: "Dashboard", icon: <FiHome /> },
-            { name: "My Training", icon: <FiBookOpen /> },
-            { name: "Assignments", icon: <FiFileText /> },
-            { name: "Quizzes", icon: <FiActivity /> },
-            { name: "Achievements", icon: <FiStar /> },
-            { name: "Certifications", icon: <FiAward /> },
-            { name: "Profile", icon: <FiUser />, action: onProfileClick },
-            {
-              name: isDarkMode ? "Light Mode" : "Dark Mode",
-              icon: isDarkMode ? <FiSun /> : <FiMoon />,
-              action: onToggleTheme,
-            },
-          ].map((item) => (
+          <div className="nav-group">
+            <label className="nav-group-label">MAIN</label>
             <button
-              key={item.name}
-              className={`sidebar-link ${currentTab === item.name ? "active" : ""}`}
-              onClick={() =>
-                item.action ? item.action() : setCurrentTab(item.name)
-              }
+              className={`sidebar-link ${currentTab === "Dashboard" ? "active" : ""}`}
+              onClick={() => setCurrentTab("Dashboard")}
             >
-              <span style={{ marginRight: "12px" }}>{item.icon}</span>
-              {item.name}
+              <FiGrid /> Dashboard
             </button>
-          ))}
+          </div>
+
+          <div className="nav-group" style={{ marginTop: "0.5rem" }}>
+            <label className="nav-group-label">TRAININGS</label>
+            <button
+              className={`sidebar-link ${currentTab === "My Training" ? "active" : ""}`}
+              onClick={() => setCurrentTab("My Training")}
+            >
+              <FiBookOpen /> My trainings
+            </button>
+            <button
+              className={`sidebar-link ${currentTab === "All Trainings" ? "active" : ""}`}
+              onClick={() => setCurrentTab("All Trainings")}
+            >
+              <FiClock /> All trainings
+            </button>
+          </div>
+
+          <div className="nav-group" style={{ marginTop: "0.5rem" }}>
+            <label className="nav-group-label">ASSESS</label>
+            <button
+              className={`sidebar-link ${currentTab === "Quizzes" ? "active" : ""}`}
+              onClick={() => setCurrentTab("Quizzes")}
+            >
+              <FiActivity /> Quizzes
+            </button>
+            <button
+              className={`sidebar-link ${currentTab === "Assignments" ? "active" : ""}`}
+              onClick={() => setCurrentTab("Assignments")}
+            >
+              <FiFileText /> Assignments
+            </button>
+          </div>
+
+          <div className="nav-group" style={{ marginTop: "0.5rem" }}>
+            <label className="nav-group-label">ACHIEVEMENTS</label>
+            <button
+              className={`sidebar-link ${currentTab === "Achievements" ? "active" : ""}`}
+              onClick={() => setCurrentTab("Achievements")}
+            >
+              <FiAward /> Achievements
+            </button>
+          </div>
+
+          <div
+            className="nav-group"
+            style={{ marginTop: "auto", paddingTop: "1.5rem" }}
+          >
+            <label className="nav-group-label">ACCOUNT</label>
+            <button
+              className={`sidebar-link ${currentTab === "Profile" ? "active" : ""}`}
+              onClick={() => setCurrentTab("Profile")}
+            >
+              <FiSettings /> Profile settings
+            </button>
+
+            <button
+              className="sidebar-link logout-link"
+              onClick={onLogout}
+              style={{ color: "#ef4444" }}
+            >
+              <FiLogOut /> Logout
+            </button>
+          </div>
         </nav>
-        <button
-          className="sidebar-logout"
-          onClick={onLogout}
-          style={{ marginTop: "auto" }}
-        >
-          <FiLogOut style={{ marginRight: "12px" }} /> Logout
-        </button>
-        <div
-          style={{
-            padding: "20px",
-            fontSize: "0.8rem",
-            color: "var(--text-sub)",
-            borderTop: "1px solid var(--border-color)",
-            marginTop: "20px",
-          }}
-        ></div>
       </aside>
 
-      <main className="edu-main">{renderTabContent()}</main>
+      <main className="edu-main">
+        {/* TOP HEADER WITH STATS */}
+        <header className="dashboard-top-header">
+          <div className="welcome-section">
+            <h1 className="welcome-text">
+              {(() => {
+                const hour = new Date().getHours();
+                if (hour < 12) return "Good Morning";
+                if (hour < 17) return "Good Afternoon";
+                return "Good Evening";
+              })()}
+              , {user?.Lms_full_name?.split(" ")[0] || user?.username}! 👋
+            </h1>
+            <p
+              style={{
+                color: "var(--text-sub)",
+                fontSize: "0.9rem",
+                fontWeight: "600",
+              }}
+            >
+              Ready to continue your learning journey?
+            </p>
+          </div>
+          <div className="top-header-right">
+            <div className="header-stat-capsule xp-capsule">
+              <FiTrendingUp className="stat-icon-mini" />
+              <span>{user?.Lms_xp || 0} XP</span>
+            </div>
+            <div className="header-stat-capsule pp-capsule">
+              <FiAward className="stat-icon-mini" />
+              <span>{user?.Lms_pp || 0} PP</span>
+            </div>
+            <div className="header-stat-capsule time-capsule">
+              <FiClock className="stat-icon-mini" />
+              <span>
+                {Math.floor((sessionTime || 0) / 60)}m {(sessionTime || 0) % 60}
+                s
+              </span>
+            </div>
+            <div className="header-stat-capsule level-capsule">
+              <span>Level {Math.floor((user?.Lms_xp || 0) / 1000) + 1}</span>
+            </div>
+            <button
+              className="header-icon-btn theme-toggle-btn"
+              onClick={onToggleTheme}
+              title="Toggle Theme"
+            >
+              {isDarkMode ? <FiSun /> : <FiMoon />}
+            </button>
+            <div className="header-user-mini" onClick={onProfileClick}>
+              <img
+                src={
+                  user?.Lms_avatar ||
+                  `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username || "Felix"}`
+                }
+                alt="Avatar"
+              />
+            </div>
+          </div>
+        </header>
+
+        <div className="dashboard-scroll-area">{renderTabContent()}</div>
+      </main>
     </div>
   );
 };

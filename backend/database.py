@@ -6,12 +6,17 @@ from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"), override=True)
 
 # MySQL Database Connection configuration
-DB_USER = os.getenv("DB_USER", "oges")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "Ogesone@123")
-DB_HOST = os.getenv("DB_HOST", "192.168.1.161")
-DB_PORT = os.getenv("DB_PORT", "3306")
-DB_NAME = os.getenv("DB_NAME", "oges_asset")
+# DB_USER = os.getenv("DB_USER", "oges")
+# DB_PASSWORD = os.getenv("DB_PASSWORD", "Ogesone@123")
+# DB_HOST = os.getenv("DB_HOST", "192.168.1.161")
+# DB_PORT = os.getenv("DB_PORT", "3306")
+# DB_NAME = os.getenv("DB_NAME", "oges_asset")
 
+DB_USER = os.getenv("DB_USER", "root")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "admin")
+DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
+DB_PORT = os.getenv("DB_PORT", "3306")
+DB_NAME = os.getenv("DB_NAME", "OgesLMS")
 
 def get_db():
     """

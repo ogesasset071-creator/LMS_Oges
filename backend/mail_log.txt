@@ -1,0 +1,63 @@
+[2026-04-13 09:53:32.012487] To: satyam@oges.co | Subject: Security Alert: New Login to OgesLMS
+Content: 
+    <p>Hello,</p>
+    <p>A new login was detected for your account at 2026-04-13 09:53:32.</p>
+    <p>If this wasn't you, please secure your account immediately.</p>
+    
+--------------------------------------------------
+[2026-04-13 09:54:31.291231] To: satyam@oges.co | Subject: Let's Go! You started Foundations of Oil and Gas Operations [MANDATORY]
+Content: 
+    <p>Excellent choice!</p>
+    <p>You've officially started learning <strong>Foundations of Oil and Gas Operations [MANDATORY]</strong>.</p>
+    <p>Keep up the momentum and reach your goals.</p>
+    
+--------------------------------------------------
+[2026-04-13 10:18:20.158684] To: satyam@oges.co | Subject: Security Alert: New Login to OgesLMS
+Content: 
+    <p>Hello,</p>
+    <p>A new login was detected for your account at 2026-04-13 10:18:20.</p>
+    <p>If this wasn't you, please secure your account immediately.</p>
+    
+--------------------------------------------------
+[2026-04-13 10:45:31.155090] To: amit@oges.co | Subject: Security Alert: New Login to OgesLMS
+Content: 
+    <p>Hello,</p>
+    <p>A new login was detected for your account at 2026-04-13 10:45:31.</p>
+    <p>If this wasn't you, please secure your account immediately.</p>
+    
+--------------------------------------------------
+[2026-04-13 11:59:35.428443] To: satyam@oges.co | Subject: Security Alert: New Login to OgesLMS
+Content: 
+    <p>Hello,</p>
+    <p>A new login was detected for your account at 2026-04-13 11:59:35.</p>
+    <p>If this wasn't you, please secure your account immediately.</p>
+    
+--------------------------------------------------
+[2026-04-13 12:57:53.610368] To: satyam@oges.co | Subject: Security Alert: New Login to OgesLMS
+Content: 
+    <p>Hello,</p>
+    <p>A new login was detected for your account at 2026-04-13 12:57:53.</p>
+    <p>If this wasn't you, please secure your account immediately.</p>
+    
+--------------------------------------------------
+[2026-04-14 09:14:20.614995] To: satyam@oges.co | Subject: Security Alert: New Login to OgesLMS
+Content: 
+    <p>Hello,</p>
+    <p>A new login was detected for your account at 2026-04-14 09:14:20.</p>
+    <p>If this wasn't you, please secure your account immediately.</p>
+    
+--------------------------------------------------
+[2026-04-14 09:39:40.220606] To: amit@oges.co | Subject: Security Alert: New Login to OgesLMS
+Content: 
+    <p>Hello,</p>
+    <p>A new login was detected for your account at 2026-04-14 09:39:40.</p>
+    <p>If this wasn't you, please secure your account immediately.</p>
+    
+--------------------------------------------------
+[2026-04-14 14:57:47.091399] To: satyam@oges.co | Subject: Security Alert: New Login to OgesLMS
+Content: 
+    <p>Hello,</p>
+    <p>A new login was detected for your account at 2026-04-14 14:57:47.</p>
+    <p>If this wasn't you, please secure your account immediately.</p>
+    
+--------------------------------------------------
